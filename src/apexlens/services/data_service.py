@@ -137,7 +137,9 @@ class DataService:
         if len(self.ingested):
             n = self.ingested.groupby("event_id")["session_id"].count()
             ev = ev.assign(lap_sessions=ev["event_id"].map(n).fillna(0).astype(int))
-        winners = self.results[(self.results["session_code"] == "R") & (self.results["position"] == 1)].set_index("event_id")["driver_id"]
+        # early championship races can credit several drivers (shared drives) with the win
+        winners = (self.results[(self.results["session_code"] == "R") & (self.results["position"] == 1)]
+                   .drop_duplicates("event_id").set_index("event_id")["driver_id"])
         ev = ev.assign(winner_id=ev["event_id"].map(winners))
         cols = ["event_id", "season", "round", "date", "grand_prix_id", "official_name", "circuit_id", "circuit_name",
                 "circuit_type", "laps", "is_sprint_weekend", "era", "winner_id"] + (["lap_sessions"] if "lap_sessions" in ev else [])
