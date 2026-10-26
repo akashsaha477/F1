@@ -113,3 +113,17 @@ holdout (−0.010 pp, CI −0.017…−0.004), consistent with driver form alrea
 driver × circuit features add nothing. Explanations are exact (additivity error 1e-14, identical to the `shap`
 library), stable across bootstrap refits (top-3 sign agreement 0.998) and only moderately aligned with Ridge
 (Spearman 0.50), as expected with correlated team-form inputs.
+
+## Phase 9 — reports, documentation and release
+- [x] `scripts/generate_reports.py` (`reporting/`): coverage, EDA, feature engineering, driver profiles, model comparison (Models A–F, ablations), error analysis and explainability reports with figures, all read from stored outputs; generated data dictionary, feature definitions and model card
+- [x] Hand-written docs: architecture, methodology, evaluation protocol, limitations; full README with setup, pipeline, API, results and licensing
+- [x] Makefile targets for every pipeline step, serving, tests and Docker
+- [x] Dockerfile (API + pipeline), frontend Dockerfile (nginx, `/api` proxy, SPA fallback), docker-compose with a `pipeline` profile
+- [x] GitHub Actions: ruff, fixture-based pytest, frontend typecheck/tests/build, Docker image builds
+
+Verification: 132 Python tests and 14 frontend tests pass; the CI test selection passes against an empty data
+directory. The backend image was built and run here (pip install, API serving real predictions from the mounted
+`data/`), except the `apt-get` layer: `deb.debian.org` is blocked by this environment's network policy, so that
+layer was replaced by a mounted `libgomp` for the test (it is required: LightGBM fails to import without it).
+The frontend image could not be built here (Docker Hub rate limit); its steps (`npm ci`, `npm run build`) pass
+locally.

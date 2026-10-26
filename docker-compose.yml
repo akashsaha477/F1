@@ -1,0 +1,32 @@
+# docker compose up --build                      -> API on :8000, dashboard on :8080 (needs data/ built)
+# docker compose --profile pipeline run pipeline -> ingest, build features, train, evaluate, reports
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./reports:/app/reports
+    environment:
+      APEXLENS_API_CORS_ORIGINS: http://localhost:8080
+
+  web:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
+  pipeline:
+    build: .
+    profiles: ["pipeline"]
+    volumes:
+      - ./data:/app/data
+      - ./reports:/app/reports
+    command: >
+      sh -c "python scripts/ingest_season.py --seasons $${SEASONS:-2022-2025} --telemetry &&
+             python scripts/build_features.py &&
+             python scripts/train_models.py &&
+             python scripts/evaluate_models.py &&
+             python scripts/generate_reports.py"
