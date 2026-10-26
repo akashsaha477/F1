@@ -328,3 +328,90 @@ export interface DriverPerformance {
   };
   events: DriverPerformanceEvent[];
 }
+
+export interface ProfileSeason {
+  driver_id: string;
+  season: number;
+  main_team: string;
+  teams: string;
+  n_dry_races: number;
+  n_laps: number;
+  race_pace_adj: number;
+  race_pace_adj_sd: number;
+  race_pace_adj_lo: number;
+  race_pace_adj_hi: number;
+  race_pace_raw: number;
+  team_effect: number | null;
+  team_effect_sd: number | null;
+  teammate_gap_race: number | null;
+  teammate_gap_race_lo: number | null;
+  teammate_gap_race_hi: number | null;
+  n_teammate_races: number;
+  consistency_sd: number;
+  consistency_lo: number | null;
+  consistency_hi: number | null;
+  quali_adj: number | null;
+  quali_adj_sd: number | null;
+  quali_gap_median: number | null;
+  quali_teammate_gap: number | null;
+  quali_teammate_gap_lo: number | null;
+  quali_teammate_gap_hi: number | null;
+  n_quali: number;
+  n_quali_teammate: number;
+  lap1_gain_mean: number | null;
+  n_lap1: number | null;
+  positions_gained_mean: number | null;
+  n_classified: number | null;
+  race_pace_adj_pctile: number | null;
+  consistency_pctile: number | null;
+  quali_adj_pctile: number | null;
+  rank_reference: string;
+  [k: string]: unknown;
+}
+
+export interface ConditionEffect {
+  driver_id: string;
+  dimension: string;
+  raw: number;
+  raw_se: number;
+  posterior_mean: number;
+  posterior_sd: number;
+  tau: number;
+  n_sessions: number;
+  n_laps: number;
+  status: "supported" | "not_distinguishable_from_zero" | "insufficient_evidence";
+  unit: string;
+  seasons: string;
+}
+
+export interface ProfileMeta {
+  race_model: { variances: Record<string, number>; n_obs: number; formula: string };
+  quali_model: { variances: Record<string, number>; n_obs: number; formula: string };
+  identification_note: string;
+  thresholds: Record<string, number>;
+  seasons: number[];
+}
+
+export interface DriverProfile {
+  driver_id: string;
+  seasons: ProfileSeason[];
+  conditions: ConditionEffect[];
+  meta: ProfileMeta;
+}
+
+export interface SeasonEffects {
+  season: number;
+  drivers: ProfileSeason[];
+  meta: ProfileMeta;
+}
+
+export interface DriverCompare {
+  drivers: [string, string];
+  profiles: Record<string, ProfileSeason[]>;
+  conditions: Record<string, ConditionEffect[]>;
+  head_to_head: {
+    sessions: { session_id: string; season: number; condition: string; same_team: boolean; diff: number; se: number }[];
+    summary: { n_sessions: number; n_same_team: number; median_diff: number | null; ci90: [number, number] | null; a_faster_share: number | null; note: string } | null;
+  };
+  meta: ProfileMeta;
+}

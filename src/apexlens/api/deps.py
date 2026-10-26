@@ -6,7 +6,7 @@ from functools import lru_cache
 
 from apexlens.config import get_settings
 from apexlens.predictions.service import PredictionService
-from apexlens.services.data_service import DataService
+from apexlens.services.data_service import DataService, ProfileService
 from apexlens.storage.paths import DataPaths
 
 
@@ -21,10 +21,15 @@ def data_service() -> DataService:
 
 
 @lru_cache
+def profile_service() -> ProfileService:
+    return ProfileService(paths())
+
+
+@lru_cache
 def prediction_service() -> PredictionService:
     return PredictionService(paths())
 
 
 def reset() -> None:
-    for f in (paths, data_service, prediction_service):
+    for f in (paths, data_service, profile_service, prediction_service):
         f.cache_clear()

@@ -1,6 +1,6 @@
 import { NavLink, Outlet } from "react-router-dom";
 
-export const IMPLEMENTED = new Set(["/", "/drivers", "/explain"]);
+export const IMPLEMENTED = new Set(["/", "/drivers", "/compare", "/explain"]);
 
 export const NAV = [
   { to: "/", label: "Overview" },

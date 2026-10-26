@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useModels, useOverview } from "../api/hooks";
 import { Card, ErrorState, LoadingState, PageHeader, StatTile, StatusPill } from "../components/ui";
 import { compact, fmtNum, titleFromId } from "../lib/format";
+import { DriverEffectsCard } from "../components/DriverEffectsCard";
 
 export default function OverviewPage() {
   const ov = useOverview();
@@ -65,6 +66,8 @@ export default function OverviewPage() {
           </ul>
         </Card>
       </div>
+
+      <DriverEffectsCard />
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card title="Recent races" subtitle="Podium and pole from F1DB">

@@ -340,3 +340,84 @@ class DataService:
                 "analyses": clean_value(cov.get("analyses", [])), "recent_races": races,
                 "seasons_with_lap_data": self.lap_seasons,
                 "results_seasons": [int(self.events["season"].min()), int(self.events["season"].max())]}
+
+
+class ProfileService:
+    """Driver fingerprints (gold ``driver_profiles``, ``driver_condition_effects``)."""
+
+    def __init__(self, paths: DataPaths):
+        self.paths = paths
+
+    @cached_property
+    def profiles(self) -> pd.DataFrame:
+        return read_table(self.paths.gold("driver_profiles"))
+
+    @cached_property
+    def conditions(self) -> pd.DataFrame:
+        return read_table(self.paths.gold("driver_condition_effects"))
+
+    @cached_property
+    def adjusted(self) -> pd.DataFrame:
+        return read_table(self.paths.gold("driver_session_adjusted"))
+
+    @cached_property
+    def meta(self) -> dict:
+        return read_json(self.paths.gold("driver_profiles") / "meta.json", default={})
+
+    def _require(self) -> None:
+        if self.profiles.empty:
+            raise NotFound("driver profiles not built; run scripts/build_features.py")
+
+    def driver_profile(self, driver_id: str) -> dict:
+        self._require()
+        p = self.profiles[self.profiles["driver_id"] == driver_id].sort_values("season")
+        if p.empty:
+            raise NotFound(f"no lap-timing profile for {driver_id} (results-only driver or no dry races)")
+        c = self.conditions[self.conditions["driver_id"] == driver_id] if len(self.conditions) else pd.DataFrame()
+        return {"driver_id": driver_id, "seasons": records(p), "conditions": records(c), "meta": clean_value(self.meta)}
+
+    def season_effects(self, season: int) -> dict:
+        self._require()
+        p = self.profiles[self.profiles["season"] == season].sort_values("race_pace_adj")
+        if p.empty:
+            raise NotFound(f"no driver profiles for season {season}")
+        return {"season": season, "drivers": records(p), "meta": clean_value(self.meta)}
+
+    def compare(self, a: str, b: str, season: int | None = None) -> dict:
+        self._require()
+        out = {"drivers": [a, b], "profiles": {}, "conditions": {}}
+        for d in (a, b):
+            p = self.profiles[self.profiles["driver_id"] == d]
+            if season is not None:
+                p = p[p["season"] == season]
+            out["profiles"][d] = records(p.sort_values("season"))
+            out["conditions"][d] = records(self.conditions[self.conditions["driver_id"] == d]) if len(self.conditions) else []
+        adj = self.adjusted
+        if season is not None:
+            adj = adj[adj["season"] == season]
+        pa = adj[adj["driver_id"] == a].set_index("session_id")
+        pb = adj[adj["driver_id"] == b].set_index("session_id")
+        common = pa.index.intersection(pb.index)
+        h2h = []
+        for sid in common:
+            ra, rb = pa.loc[sid], pb.loc[sid]
+            h2h.append({"session_id": sid, "season": int(ra["season"]), "condition": ra["condition"],
+                        "same_team": ra["constructor_id"] == rb["constructor_id"],
+                        "diff": float(ra["adj_pace"] - rb["adj_pace"]),
+                        "se": float(np.sqrt(ra["se"] ** 2 + rb["se"] ** 2))})
+        h = pd.DataFrame(h2h)
+        summary = None
+        if len(h):
+            dry = h[h["condition"] == "dry"]
+            vals = dry["diff"].to_numpy()
+            rng = np.random.default_rng(0)
+            boots = [np.median(rng.choice(vals, len(vals))) for _ in range(500)] if len(vals) >= 3 else []
+            summary = {"n_sessions": int(len(dry)), "n_same_team": int(dry["same_team"].sum()),
+                       "median_diff": float(np.median(vals)) if len(vals) else None,
+                       "ci90": [float(np.quantile(boots, 0.05)), float(np.quantile(boots, 0.95))] if boots else None,
+                       "a_faster_share": float(np.mean(vals < 0)) if len(vals) else None,
+                       "note": ("Raw head-to-head of condition-adjusted race pace in shared sessions. Unless the drivers "
+                                "were team-mates, the difference includes the car.")}
+        out["head_to_head"] = {"sessions": records(h), "summary": summary}
+        out["meta"] = clean_value(self.meta)
+        return out

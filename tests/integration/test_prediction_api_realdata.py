@@ -46,3 +46,16 @@ def test_wet_scenario_warns_on_low_evidence(client):
     p = client.post("/api/predict/lap-time", json={"driver_id": "oliver-bearman", "circuit_id": "interlagos",
                                                     "compound": "WET", "rainfall": True}).json()
     assert any("wet" in w.lower() for w in p["warnings"])
+
+
+def test_profile_endpoints(client):
+    p = client.get("/api/drivers/max-verstappen/profile").json()
+    s = p["seasons"][-1]
+    assert s["race_pace_adj_lo"] <= s["race_pace_adj"] <= s["race_pace_adj_hi"]
+    assert {c["status"] for c in p["conditions"]} <= {"supported", "not_distinguishable_from_zero", "insufficient_evidence"}
+    assert "identification_note" in p["meta"]
+    eff = client.get("/api/driver-effects", params={"season": 2025}).json()
+    assert len(eff["drivers"]) >= 20
+    cmp = client.get("/api/drivers/compare", params={"ids": "lando-norris,oscar-piastri", "season": 2025}).json()
+    assert cmp["head_to_head"]["summary"]["n_same_team"] > 10
+    assert client.get("/api/drivers/juan-manuel-fangio/profile").status_code == 404

@@ -65,7 +65,7 @@ def create_app() -> FastAPI:
                 "data": {"silver": (p.processed / "laps").exists(), "gold": (p.features / "lap_features").exists(),
                          "models": (p.models / "production.json").exists()}}
 
-    for r in (catalog.router, sessions.router, drivers.router, predictions.router, models.router):
+    for r in (catalog.router, sessions.router, drivers.router, drivers.effects_router, predictions.router, models.router):
         app.include_router(r, prefix="/api")
     return app
 

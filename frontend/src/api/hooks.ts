@@ -2,6 +2,9 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { getJson, postJson, qs } from "./client";
 import type {
   Circuit,
+  DriverCompare,
+  DriverProfile,
+  SeasonEffects,
   ComparisonPrediction,
   Constructor,
   DriverIndexItem,
@@ -77,4 +80,36 @@ export const useScenario = () => useMutation({ mutationFn: (s: LapScenario) => p
 
 export function useJson<T>(key: unknown[], path: string | null) {
   return useQuery({ queryKey: key, queryFn: () => getJson<T>(path as string), enabled: !!path, staleTime: STALE });
+}
+
+export const useDriverProfile = (driver_id?: string) =>
+  useQuery({
+    queryKey: ["driver-profile", driver_id],
+    queryFn: () => getJson<DriverProfile>(`/drivers/${driver_id}/profile`),
+    enabled: !!driver_id,
+    staleTime: STALE,
+    retry: false,
+  });
+
+export const useSeasonEffects = (season?: number) =>
+  useQuery({
+    queryKey: ["driver-effects", season],
+    queryFn: () => getJson<SeasonEffects>(`/driver-effects${qs({ season })}`),
+    enabled: !!season,
+    staleTime: STALE,
+  });
+
+export const useDriverCompare = (a?: string, b?: string, season?: number) =>
+  useQuery({
+    queryKey: ["driver-compare", a, b, season],
+    queryFn: () => getJson<DriverCompare>(`/drivers/compare${qs({ ids: `${a},${b}`, season })}`),
+    enabled: !!a && !!b && a !== b,
+    staleTime: STALE,
+  });
+
+/** Display name lookup for constructors (falls back to a title-cased id). */
+export function useConstructorName() {
+  const q = useQuery({ queryKey: ["constructors", "all"], queryFn: () => getJson<Constructor[]>("/constructors"), staleTime: Infinity });
+  const map = new Map((q.data ?? []).map((c) => [c.constructor_id, c.name]));
+  return (id?: string | null) => (id ? map.get(id) ?? id.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ") : "—");
 }

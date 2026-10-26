@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useConstructors, useDriverPerformance, useDrivers, useSeasons } from "../api/hooks";
 import { Badge, Card, EmptyState, ErrorState, KV, LoadingState, PageHeader, Select, StatTile, inputClass } from "../components/ui";
 import { PaceTimeline } from "../charts/PaceTimeline";
+import { DriverProfileCard } from "../components/DriverProfileCard";
 import { fmtNum, fmtPct, titleFromId } from "../lib/format";
 
 export default function DriverExplorerPage() {
@@ -82,6 +83,7 @@ export default function DriverExplorerPage() {
                 <StatTile label="Avg positions gained" value={fmtNum(perf.data.results_summary.mean_positions_gained, 2)}
                   hint={`grid → finish, ${perf.data.results_summary.positions_gained_n} classified races`} />
               </div>
+              {perf.data.driver.has_lap_data && selected && <DriverProfileCard driverId={selected} />}
               {perf.data.driver.has_lap_data && (
                 <Card title="Race pace by event" subtitle="Median representative lap vs the session reference, and gap to the team-mate in the same session. Negative = faster; the axis is inverted so up means faster.">
                   <PaceTimeline events={perf.data.events} title={`${perf.data.driver.name} race pace by event`} />
