@@ -374,7 +374,26 @@ class ProfileService:
         if p.empty:
             raise NotFound(f"no lap-timing profile for {driver_id} (results-only driver or no dry races)")
         c = self.conditions[self.conditions["driver_id"] == driver_id] if len(self.conditions) else pd.DataFrame()
-        return {"driver_id": driver_id, "seasons": records(p), "conditions": records(c), "meta": clean_value(self.meta)}
+        tyre = read_table(self.paths.gold("driver_tyre_effects"))
+        tyre = tyre[tyre["driver_id"] == driver_id] if len(tyre) else tyre
+        return {"driver_id": driver_id, "seasons": records(p), "conditions": records(c), "tyre_effects": records(tyre),
+                "meta": clean_value(self.meta)}
+
+    def conditions_by_dimension(self, dimension: str) -> dict:
+        self._require()
+        c = self.conditions[self.conditions["dimension"] == dimension] if len(self.conditions) else pd.DataFrame()
+        if c.empty:
+            raise NotFound(f"no condition estimates for {dimension}")
+        defs = (self.meta or {}).get("condition_definitions", {})
+        return {"dimension": dimension, "definition": defs.get(dimension), "rows": records(c.sort_values("posterior_mean")),
+                "tau": float(c["tau"].iloc[0]), "thresholds": clean_value((self.meta or {}).get("thresholds"))}
+
+    def clusters(self) -> dict:
+        pts = read_table(self.paths.gold("driver_clusters"))
+        meta = read_json(self.paths.gold("driver_clusters") / "meta.json")
+        if meta is None:
+            raise NotFound("driver clusters not built; run scripts/build_features.py")
+        return {"points": records(pts), "meta": clean_value(meta)}
 
     def season_effects(self, season: int) -> dict:
         self._require()
@@ -526,3 +545,100 @@ class TrackService:
         return {"n_sessions": int(len(s)), "circuits": sorted(s["circuit_id"].dropna().unique().tolist()) if len(s) else [],
                 "marker_validation": clean_value(val.describe().to_dict()) if len(val) else None,
                 "experiments": clean_value(exp)}
+
+
+class TyreService:
+    """Model C outputs: degradation summaries, driver deviations, stints and degradation curves."""
+
+    def __init__(self, paths: DataPaths):
+        self.paths = paths
+
+    @cached_property
+    def stints(self) -> pd.DataFrame:
+        return read_table(self.paths.gold("tyre_stints"))
+
+    def _t(self, name: str) -> pd.DataFrame:
+        return read_table(self.paths.gold(name))
+
+    def degradation(self, season: int | None = None, circuit_id: str | None = None, compound: str | None = None,
+                    driver_id: str | None = None) -> dict:
+        if self.stints.empty:
+            raise NotFound("tyre tables not built; run scripts/build_features.py")
+        comp = self._t("tyre_degradation")
+        circ = self._t("tyre_degradation_circuit")
+        drv = self._t("driver_tyre_effects")
+        st = self.stints
+        if season is not None:
+            comp, st = comp[comp["season"] == season], st[st["season"] == season]
+            drv = drv[drv["season"] == season]
+        if circuit_id:
+            circ, st = circ[circ["circuit_id"] == circuit_id], st[st["circuit_id"] == circuit_id]
+        if compound:
+            comp, circ, st, drv = (d[d["compound"] == compound] for d in (comp, circ, st, drv))
+        if driver_id:
+            st, drv = st[st["driver_id"] == driver_id], drv[drv["driver_id"] == driver_id]
+        ev = read_json(self.paths.models / "evaluation_runs" / "tyre_degradation.json", default={})
+        return {
+            "by_compound": records(comp), "by_circuit": records(circ), "temperature": records(self._t("tyre_temperature")),
+            "session_points": records(self._t("tyre_session_points")) if circuit_id is None and driver_id is None else [],
+            "driver_effects": records(drv),
+            "stints": records(st[["session_id", "event_id", "season", "driver_id", "constructor_id", "stint", "compound", "n_laps",
+                                  "age_min", "age_max", "slope_pct", "slope_se", "track_temp_c", "circuit_id"]].sort_values(
+                                      ["season", "session_id"]).tail(400)),
+            "evaluation": clean_value(ev),
+            "definitions": {
+                "slope_pct": "Fuel-corrected change in lap time per lap of tyre age, % of the session reference lap",
+                "fuel_correction": "lap-number slope of the session's stage-1 model (identified via pit stops)",
+                "driver_effect": "driver's stint slope minus other drivers' slopes on the same compound in the same session, "
+                                 "shrunk by empirical Bayes",
+            },
+            "limitations": ["Lap-time increases also come from traffic, tyre management, damage and track evolution.",
+                            "SOFT/MEDIUM/HARD are relative names: the Pirelli C-number differs by event.",
+                            "Temperature associations are descriptive; temperature is confounded with circuit and season."],
+        }
+
+    def curve(self, compound: str, circuit_id: str | None, driver_id: str | None, max_age: int) -> dict:
+        comp = self._t("tyre_degradation")
+        if comp.empty:
+            raise NotFound("tyre tables not built")
+        latest = comp[comp["compound"] == compound].sort_values("season").tail(1)
+        if latest.empty:
+            raise NotFound(f"no degradation estimate for {compound}")
+        base = latest.iloc[0]
+        slope, lo, hi = float(base["slope_pct"]), float(base["ci_lo"]), float(base["ci_hi"])
+        assumptions = [f"{compound} slope from {int(base['season'])} ({int(base['n_stints'])} stints)."]
+        if circuit_id:
+            c = self._t("tyre_degradation_circuit")
+            c = c[(c["circuit_id"] == circuit_id) & (c["compound"] == compound)]
+            if len(c) and c.iloc[0]["n_stints"] >= 5:
+                n = float(c.iloc[0]["n_stints"])
+                w = n / (n + 20)
+                cr = c.iloc[0]
+                slope = w * float(cr["slope_pct"]) + (1 - w) * slope
+                if pd.notna(cr["ci_lo"]) and pd.notna(cr["ci_hi"]):
+                    lo, hi = w * float(cr["ci_lo"]) + (1 - w) * lo, w * float(cr["ci_hi"]) + (1 - w) * hi
+                assumptions.append(f"Circuit estimate ({int(n)} stints) blended with the season value (weight {w:.2f}).")
+            else:
+                assumptions.append("Too few stints at this circuit; season-wide value used.")
+        dev = None
+        if driver_id:
+            d = self._t("driver_tyre_effects")
+            d = d[(d["driver_id"] == driver_id) & (d["compound"] == compound)].sort_values("season").tail(1)
+            if len(d):
+                dev = d.iloc[0].to_dict()
+                if dev["status"] == "supported":
+                    slope += float(dev["posterior_mean"])
+                    lo += float(dev["posterior_mean"])
+                    hi += float(dev["posterior_mean"])
+                    assumptions.append("Driver-specific deviation applied (supported by data).")
+                else:
+                    assumptions.append(f"Driver deviation not applied: {dev['status'].replace('_', ' ')}.")
+        ages = np.arange(1, max_age + 1)
+        ref = float(self.stints["session_ref_s"].median()) if len(self.stints) else None
+        return {"compound": compound, "circuit_id": circuit_id, "driver_id": driver_id, "slope_pct_per_lap": slope,
+                "season_ci": [lo, hi], "points": [{"tyre_age": int(a), "delta_pct": slope * (a - 1),
+                                                    "lo_pct": lo * (a - 1), "hi_pct": hi * (a - 1)} for a in ages],
+                "reference_lap_s": ref, "driver_effect": clean_value(dev), "assumptions": assumptions,
+                "slope_ci": [lo, hi],
+                "note": "Linear fuel-corrected degradation; the band is the 90% interval of the slope (session-cluster "
+                        "bootstrap), blended like the point estimate."}

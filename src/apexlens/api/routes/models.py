@@ -53,3 +53,20 @@ def evaluation():
     for h in run.get("horizons", {}).values():
         h.get("global_explanations", {}).pop("ridge_coefficients", None)
     return clean_value(run)
+
+
+@router.get("/models/{model_version}/explanation-validation")
+def explanation_validation(model_version: str = VERSION):
+    _meta(model_version)
+    v = read_json(paths().models / model_version / "explanation_validation.json")
+    if v is None:
+        raise NotFound("explanation validation is stored for production models only (run scripts/evaluate_models.py)")
+    return clean_value(v)
+
+
+@router.get("/experiments")
+def experiments():
+    """Secondary experiments: Model B / corner reliability, Model C tyre degradation, ablations."""
+    base = paths().models / "evaluation_runs"
+    return clean_value({name: read_json(base / f"{name}.json") for name in
+                        ("corner_experiments", "tyre_degradation", "ablations", "quali_model")})

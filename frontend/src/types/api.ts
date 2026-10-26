@@ -501,3 +501,40 @@ export interface TelemetryResponse {
   channels?: { measured: string[]; derived: string[]; unavailable: string[] };
   note?: string;
 }
+
+export interface TyreDegradation {
+  by_compound: { season: number; compound: string; slope_pct: number; ci_lo: number; ci_hi: number; n_stints: number; n_sessions: number; slope_s_per_lap: number }[];
+  by_circuit: { circuit_id: string; compound: string; slope_pct: number; ci_lo: number | null; ci_hi: number | null; n_stints: number; n_sessions: number }[];
+  temperature: { compound: string; slope_per_degC: number; se: number; ci_lo: number; ci_hi: number; intercept: number; n_sessions: number; temp_min: number; temp_max: number }[];
+  session_points: { session_id: string; compound: string; slope: number; temp: number; n: number }[];
+  driver_effects: { driver_id: string; season: number; compound: string; raw: number; raw_se: number; posterior_mean: number; posterior_sd: number; tau: number; n_stints: number; n_sessions: number; status: string }[];
+  stints: { session_id: string; season: number; driver_id: string; stint: number; compound: string; n_laps: number; slope_pct: number; slope_se: number; track_temp_c: number; circuit_id: string }[];
+  evaluation: {
+    n_predicted_laps: number;
+    n_events: number;
+    mae_pct: Record<string, number>;
+    mae_s: Record<string, number>;
+    comparisons: Record<string, { estimate: number; lo: number; hi: number; significant: boolean }>;
+    protocol: string;
+  };
+  definitions: Record<string, string>;
+  limitations: string[];
+}
+
+export interface DegradationCurve {
+  compound: string;
+  slope_pct_per_lap: number;
+  slope_ci: [number, number];
+  points: { tyre_age: number; delta_pct: number; lo_pct: number; hi_pct: number }[];
+  reference_lap_s: number | null;
+  assumptions: string[];
+  note: string;
+}
+
+export interface ConditionDimension {
+  dimension: string;
+  definition: string | null;
+  rows: ConditionEffect[];
+  tau: number;
+  thresholds: Record<string, number>;
+}

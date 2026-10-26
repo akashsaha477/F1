@@ -50,7 +50,8 @@ class ComparisonRequest(ScenarioConditions):
 
 class DegradationRequest(BaseModel):
     driver_id: str | None = None
-    compound: Compound = "MEDIUM"
+    circuit_id: str | None = None
+    compound: Literal["SOFT", "MEDIUM", "HARD"] = "MEDIUM"
     season: int | None = None
     max_tyre_age: int = Field(30, ge=5, le=60)
 

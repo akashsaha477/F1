@@ -39,11 +39,13 @@ export const GROUP_LABELS: Record<string, string> = {
 
 export const groupLabel = (g: string) => GROUP_LABELS[g] ?? g;
 
+// Validated with the dataviz palette checker against the dark surface (orange / blue / aqua pass all-pairs);
+// tyre-wall colours (red / yellow / white) were rejected because red and yellow are too close.
 export const COMPOUND_COLORS: Record<string, string> = {
-  SOFT: "#e66767",
-  MEDIUM: "#c98500",
-  HARD: "#c3c2b7",
-  INTERMEDIATE: "#199e70",
-  WET: "#3987e5",
+  SOFT: "#d95926",
+  MEDIUM: "#3987e5",
+  HARD: "#199e70",
+  INTERMEDIATE: "#c98500",
+  WET: "#9085e9",
   UNKNOWN: "#898781",
 };

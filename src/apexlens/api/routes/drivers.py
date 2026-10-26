@@ -30,3 +30,13 @@ effects_router = APIRouter(tags=["drivers"])
 @effects_router.get("/driver-effects")
 def driver_effects(season: int = Query(..., ge=1950, le=2100)):
     return profile_service().season_effects(season)
+
+
+@effects_router.get("/driver-clusters")
+def driver_clusters():
+    return profile_service().clusters()
+
+
+@effects_router.get("/conditions")
+def conditions(dimension: str = Query(..., pattern="^[a-z_]+$", max_length=40)):
+    return profile_service().conditions_by_dimension(dimension)

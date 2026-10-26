@@ -3,6 +3,8 @@ from __future__ import annotations
 from fastapi import APIRouter, Query
 
 from apexlens.api.deps import data_service
+from apexlens.services.data_service import clean_value
+from apexlens.services.methodology import METHODOLOGY
 
 router = APIRouter(tags=["catalog"])
 
@@ -57,3 +59,8 @@ def features():
 @router.get("/overview")
 def overview():
     return data_service().overview()
+
+
+@router.get("/methodology")
+def methodology():
+    return clean_value(METHODOLOGY)

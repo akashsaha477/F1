@@ -318,6 +318,7 @@ class PredictionService:
                 "Traffic, damage, setup and strategy instructions are not observed.",
             ],
         }
+        payload["uncertainty"] = uncertainty_summary(payload)
         payload["narrative"] = lap_narrative(payload)
         return payload
 
@@ -437,6 +438,34 @@ class PredictionService:
         return {"base_prediction_pct": base_pred, "changes": out,
                 "note": "Changes are evaluated one at a time within the central 98% of training data. They describe the "
                         "model's response, not the causal effect of an intervention."}
+
+
+def uncertainty_summary(p: dict) -> dict:
+    """Four separately reported components (no combined score). Level rules are fixed and documented here."""
+    ev = p["evidence"]
+    n_ev, n_circ = ev.get("driver_events", 0), ev.get("driver_laps_at_circuit", 0)
+    coverage = "good" if n_ev >= 10 and n_circ >= 30 else ("limited" if n_ev >= 3 else "weak")
+    reasons = []
+    if n_ev < 10:
+        reasons.append(f"{n_ev} previous races for this driver")
+    if n_circ < 30:
+        reasons.append(f"{n_circ} representative laps at this circuit")
+    if p["inputs"].get("compound") in WET and ev.get("driver_wet_laps", 0) < MIN_WET_DRIVER_LAPS:
+        coverage = "weak"
+        reasons.append("few wet laps")
+    iv = p["prediction"]["interval"]
+    mu = p["prediction"].get("model_uncertainty")
+    outside = [f for f in p["extrapolation"] if f["outside_observed_range"]]
+    return {
+        "data_coverage": {"level": coverage, "reasons": reasons,
+                          "rule": "good: >= 10 previous races and >= 30 laps at the circuit; limited: >= 3 races; weak otherwise or wet with < 30 wet laps"},
+        "lap_to_lap_and_model_error": {"interval_half_width_pct": (iv["hi_pct"] - iv["lo_pct"]) / 2, "level": iv["level"],
+                                       "meaning": "range for a single representative lap (conformal, calibrated on later races)"},
+        "model_uncertainty": {"sd_pct": mu["sd_pct"] if mu else None,
+                              "meaning": "spread of the expected value across event-bootstrap refits"},
+        "extrapolation_risk": {"level": "outside_training_range" if outside else ("edge_of_training_data" if p["extrapolation"] else "none"),
+                               "features": [f["feature"] for f in p["extrapolation"]]},
+    }
 
 
 def _metric_subset(m: dict) -> dict:

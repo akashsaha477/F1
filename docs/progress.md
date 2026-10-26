@@ -69,3 +69,29 @@ apex error 10 m. Overall team-mate corner deltas are only weakly repeatable (spl
 p ≈ 0.07); slow-vs-fast corner *specialisation* is not repeatable (r = −0.06, p ≈ 0.63). Adding driver
 corner-category profiles to the sector model does not reduce error (ΔMAE −0.002 pp, 95% CI −0.004…+0.0005).
 No driver × circuit-type deviation (street, high-speed, slow-corner circuits) is distinguishable from zero.
+
+## Phase 5 — explainability and uncertainty
+- [x] Exact TreeSHAP (LightGBM `pred_contrib`) and exact linear contributions; grouped feature contributions
+- [x] Global: mean |contribution|, grouped permutation importance on the holdout, ALE curves
+- [x] Local: plain-language narrative, counterfactuals (same car, conditions switched), evidence counts, range warnings
+- [x] Uncertainty: dry/wet split-conformal intervals, 20-model event-bootstrap ensemble (model spread reported separately)
+- [x] Explanation validation (`explainability/validation.py`): additivity, agreement with the `shap` library, stability across bootstrap refits, sensitivity to small perturbations, agreement across horizons and with Ridge, correlated-input pairs
+- [x] API: `/api/explain`, `/api/models/{v}/explanation-validation`, `/api/experiments`
+
+## Phase 6 — tyre and weather lab
+- [x] Model C (`modeling/tyre_model.py`): fuel-corrected stint slopes (stints >= 14 laps, first 5 laps anchor the level), precision-weighted compound/season/circuit summaries with session-cluster bootstrap intervals, driver degradation deviations with shrinkage, track-temperature association
+- [x] Predictive test, walk-forward: flat < compound < compound+circuit; adding driver slopes does not help
+- [x] API: `/api/tyres/degradation`, `/api/predict/tyre-degradation` (curve with blended interval)
+- [x] Frontend: Tyre & weather lab (compound/season rates, circuit ranking, degradation curve, temperature association)
+
+Findings: compound-specific slopes beat a flat slope (ΔMAE −0.15 pp, 95% CI −0.26…−0.004); circuit-specific
+slopes do not significantly improve on compound only (−0.03 pp, CI −0.08…+0.01); driver-specific slopes add
+nothing (+0.002 pp). Soft degrades faster than medium and hard in every season; the season-level intervals overlap.
+
+## Phase 7 — full dashboard and remaining models
+- [x] Model E (`driver_profiles/clustering.py`): PCA + k-means over 81 driver-seasons with bootstrap ARI. k = 2 is stable (ARI 0.82) but mainly separates pace relative to team-mates (|r| = 0.76); k >= 3 is unstable (ARI <= 0.58). Reported as exploratory, no style labels
+- [x] Model F (`modeling/quali_model.py`): pre-event qualifying gap to pole; LightGBM beats the team-form baseline on MAE (−0.15 pp, CI −0.23…−0.09), event Spearman 0.71 vs 0.65, pole hit rate equal (0.44)
+- [x] Feature-group ablations (`modeling/ablation.py`), cumulative and leave-one-group-out
+- [x] Methodology service (`/api/methodology`) as the single source for cleaning rules, model descriptions, leakage controls and limitations
+- [x] Frontend pages: Tyre & weather lab, Race & lap explorer (lap times with exclusion reasons, stints, weather, results, race control), Scenario laboratory, Data & methodology — all nine pages in place
+- [x] Frontend tests for the new pages; backend tests for tyre slopes and clustering

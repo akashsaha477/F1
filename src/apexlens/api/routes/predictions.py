@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException
 
-from apexlens.api.deps import prediction_service
-from apexlens.schemas.api import ComparisonRequest, ExplainRequest, LapTimeRequest
+from apexlens.api.deps import prediction_service, tyre_service
+from apexlens.schemas.api import ComparisonRequest, DegradationRequest, ExplainRequest, LapTimeRequest
 
 router = APIRouter(tags=["predictions"])
 
@@ -30,3 +30,8 @@ def explain(req: ExplainRequest):
 @router.post("/scenarios")
 def scenarios(req: LapTimeRequest):
     return prediction_service().counterfactuals(req)
+
+
+@router.post("/predict/tyre-degradation")
+def predict_tyre_degradation(req: DegradationRequest):
+    return tyre_service().curve(req.compound, req.circuit_id, req.driver_id, req.max_tyre_age)

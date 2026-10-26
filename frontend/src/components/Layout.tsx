@@ -1,7 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
 
-export const IMPLEMENTED = new Set(["/", "/drivers", "/compare", "/tracks", "/explain"]);
-
 export const NAV = [
   { to: "/", label: "Overview" },
   { to: "/drivers", label: "Driver explorer" },
@@ -14,7 +12,7 @@ export const NAV = [
   { to: "/methodology", label: "Data & methodology" },
 ];
 
-export function Layout({ nav = NAV.filter((n) => IMPLEMENTED.has(n.to)) }: { nav?: typeof NAV }) {
+export function Layout({ nav = NAV }: { nav?: typeof NAV }) {
   return (
     <div className="flex min-h-full">
       <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col border-r border-line bg-surface-1 px-3 py-4 md:flex">
