@@ -3,7 +3,11 @@
 import numpy as np
 import pandas as pd
 
-from apexlens.driver_profiles.fingerprint import _percentile_lower_better, _status, session_regression_residuals
+from apexlens.driver_profiles.fingerprint import (
+    _percentile_lower_better,
+    _status,
+    session_regression_residuals,
+)
 from apexlens.driver_profiles.session_adjust import adjust_session
 
 OFFSETS = {"a": -0.6, "b": -0.2, "c": 0.0, "d": 0.3, "e": 0.5}

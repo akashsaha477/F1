@@ -37,3 +37,16 @@ Measured (lap pace, MAE in % of session reference lap, 2025 holdout): LightGBM 0
 LightGBM is significantly better than both baselines but not significantly better than Ridge/GAM on the
 holdout. 90% conformal intervals cover 87% overall and only ~74% of wet laps (under-coverage reported).
 Driver × circuit history adds no measurable accuracy (grouped permutation importance ≈ 0).
+
+## Phase 3 — driver performance fingerprint
+- [x] Stage 1 (`driver_profiles/session_adjust.py`): per-session OLS separating driver pace from compound, compound-specific tyre age and lap number; non-identifiable terms dropped in a fixed, recorded order; AR(1)-inflated standard errors
+- [x] Stage 2 (`driver_profiles/mixed_model.py`): crossed random effects (driver, driver-season, team-season) with session fixed effects, REML via Henderson's equations; validated against statsmodels and on simulated data
+- [x] Fingerprint per driver-season: team-adjusted race pace and qualifying (90% posterior intervals, within-season percentiles), team-mate gaps with bootstrap CIs, lap-to-lap consistency, lap-1 and grid-to-finish position changes, outcome categories (separate from pace)
+- [x] Condition-specific deviations with empirical-Bayes shrinkage and evidence thresholds: wet races, wet qualifying (per-session regression residuals), street circuits
+- [x] API: `/api/drivers/{id}/profile`, `/api/driver-effects?season=`, `/api/drivers/compare`
+- [x] Frontend: fingerprint card, season effects chart on the overview, driver comparison page (profiles, head-to-head, condition evidence, model-based scenario comparison)
+
+Findings (2022–2025): race-pace variance components — driver 0.104, driver-season 0.005, team-season 0.205,
+residual 0.110 (%²). Once dry pace and car are accounted for, no driver's wet-race, wet-qualifying or
+street-circuit deviation is distinguishable from zero (estimated between-driver variance ≈ 0 for street and wet
+qualifying, τ ≈ 0.14% for wet races); the application reports these as such instead of ranking drivers.
