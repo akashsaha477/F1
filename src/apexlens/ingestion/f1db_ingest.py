@@ -116,6 +116,7 @@ def season_tables(season: int, races: list[dict]) -> dict[str, pd.DataFrame]:
             "circuit_layout_id": info.get("circuitLayoutId"), "circuit_type": info.get("circuitType"),
             "direction": info.get("direction"), "course_length_km": to_float(info.get("courseLength")),
             "turns": info.get("turns"), "laps": info.get("laps"), "distance_km": to_float(info.get("distance")),
+            "sprint_laps": info.get("sprintRaceLaps"),
             "qualifying_format": info.get("qualifyingFormat"), "sprint_qualifying_format": info.get("sprintQualifyingFormat"),
             "is_sprint_weekend": is_sprint, "era": era_for(season),
         })
@@ -198,6 +199,17 @@ def season_tables(season: int, races: list[dict]) -> dict[str, pd.DataFrame]:
             cstand.append({"event_id": eid, "season": season, "round": rnd, "position": pos,
                            "constructor_id": x.get("constructorId"), "points": to_float(x.get("points"))})
 
+    # F1DB only records session dates from 2024 on; earlier sessions are inferred from result files.
+    have = {(x["event_id"], x["session_code"]) for x in sessions}
+    for x in parts:
+        key = (x["event_id"], x["session_code"])
+        if key not in have:
+            have.add(key)
+            sessions.append({"session_id": _session_id(x["event_id"], x["session_code"]), "event_id": x["event_id"],
+                             "season": season, "round": int(x["event_id"].split("-")[1]),
+                             "session_code": x["session_code"], "date": None, "start_utc": None})
+    for x in sessions:
+        x.setdefault("date_source", "f1db_schedule" if x.get("date") else "inferred_from_results")
     part_df = pd.DataFrame(parts)
     if len(part_df):
         part_df["driver_number"] = pd.to_numeric(part_df["driver_number"], errors="coerce").astype("Int64")

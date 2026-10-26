@@ -48,7 +48,7 @@ def build_coverage_report(ctx: IngestionContext) -> dict:
         ing = ingested[(ingested.season == season) & (ingested.get("n_laps", 0).fillna(0) > 0)]
         ls = laps[laps.season == season]
         ts = tel[tel.season == season] if len(tel) else tel
-        q_sessions = ing[ing.session_code == "Q"]
+        q_sessions = ing[ing.session_code.isin(["Q", "SQ"])]
         valid_tyre = ls["compound"].isin(["SOFT", "MEDIUM", "HARD", "INTERMEDIATE", "WET"]) & ls["tyre_life_laps"].notna()
         per_season.append({
             "season": int(season),
@@ -56,8 +56,8 @@ def build_coverage_report(ctx: IngestionContext) -> dict:
             "sessions_with_timing": int(len(ing)),
             "pct_sessions_with_timing": _pct(len(ing), len(fs)),
             "sessions_by_code": {k: int(v) for k, v in Counter(ing["session_code"]).items()},
-            "qualifying_sessions_with_telemetry": int(ts["session_id"].nunique()) if len(ts) else 0,
-            "pct_qualifying_sessions_with_telemetry": _pct(ts["session_id"].nunique() if len(ts) else 0, len(q_sessions)),
+            "quali_sessions_with_telemetry": int(ts["session_id"].nunique()) if len(ts) else 0,
+            "pct_quali_sessions_with_telemetry": _pct(ts["session_id"].nunique() if len(ts) else 0, len(q_sessions)),
             "telemetry_laps": int(len(ts)),
             "laps": int(len(ls)),
             "clean_laps": int(ls["is_clean"].sum()),
@@ -162,12 +162,12 @@ def write_markdown(rep: dict, path: Path) -> None:
         lines.append(f"| {k} | {v.get('seasons')} | {v.get('licence') or v.get('status', '')} |")
     lines += ["", "## Per season (lap-level sources)", "",
               "| Season | F1DB sessions | Sessions with timing | % | Laps | Clean laps | % valid tyre | % weather | "
-              "Q sessions w/ telemetry | Telemetry laps | Wet clean laps | Sessions w/ wet running |",
+              "Q/SQ sessions w/ telemetry | Telemetry laps | Wet clean laps | Sessions w/ wet running |",
               "|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for s in rep["per_season"]:
         lines.append(f"| {s['season']} | {s['f1db_sessions']} | {s['sessions_with_timing']} | {s['pct_sessions_with_timing']} | "
                      f"{s['laps']} | {s['clean_laps']} | {s['pct_laps_valid_tyre_info']} | {s['pct_laps_with_weather']} | "
-                     f"{s['qualifying_sessions_with_telemetry']} | {s['telemetry_laps']} | {s['wet_clean_laps']} | "
+                     f"{s['quali_sessions_with_telemetry']} ({s['pct_quali_sessions_with_telemetry']}%) | {s['telemetry_laps']} | {s['wet_clean_laps']} | "
                      f"{s['sessions_with_wet_running']} |")
     lines += ["", "## Supported analyses", "", "| Analysis | Supported | Evidence | Limitation |", "|---|---|---|---|"]
     for a in rep["analyses"]:
