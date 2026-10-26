@@ -12,6 +12,7 @@ import logging
 from dataclasses import asdict
 from datetime import UTC, datetime
 
+import joblib
 import pandas as pd
 
 from apexlens.data_sources.registry import ProvenanceRegistry
@@ -117,6 +118,11 @@ def train_lap_pace(paths: DataPaths, horizons=("pre_event", "pre_race"), n_boot:
                                                   "spec": final["spec"], "horizon": horizon}, meta)
             versions[name] = version
         set_production(paths.models, f"{LP.TASK}_{horizon}", versions[selected])
+        if selected == "lightgbm":
+            best_it = final["fitted"]["lightgbm"]["model"].best_iteration_
+            log.info("bootstrap ensemble (%s, %d trees)", horizon, best_it)
+            ens = LP.fit_bootstrap_ensemble(paths, horizon, n_models=20, n_estimators=max(best_it, 50), seed=seed)
+            joblib.dump(ens, paths.models / versions[selected] / "ensemble.joblib")
         write_json(paths.models / versions[selected] / "global_explanations.json", expl)
         summary["horizons"][horizon] = {
             "spec": wf["spec"], "folds": wf["folds"], "pooled": wf["pooled"], "comparisons": wf["comparisons"],

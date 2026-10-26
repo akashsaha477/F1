@@ -204,3 +204,26 @@ def fit_final(paths: DataPaths, horizon: str = "pre_event", include: tuple[str, 
     return {"spec": spec, "fitted": fitted, "split": split, "feature_ranges": ranges, "compound_counts": compounds,
             "n_rows": int(len(df)), "train_period": split.train_period,
             "calib_events": sorted(df.loc[split.calib_idx, "event_id"].unique().tolist())}
+
+
+def fit_bootstrap_ensemble(paths: DataPaths, horizon: str, n_models: int = 20, n_estimators: int = 300,
+                           seed: int = 0) -> list[LightGBMPaceModel]:
+    """LightGBM models refit on event-cluster bootstrap resamples.
+
+    The spread of their predictions estimates *model* (estimation) uncertainty of an expected pace or of a
+    difference between two drivers — distinct from the lap-to-lap noise covered by conformal intervals.
+    """
+    df = load_dataset(paths)
+    spec = feature_spec(horizon, available=set(df.columns))
+    rng = np.random.default_rng(seed)
+    events = df["event_id"].unique()
+    by_event = {e: idx for e, idx in df.groupby("event_id").indices.items()}
+    models = []
+    for i in range(n_models):
+        pick = rng.choice(events, size=len(events), replace=True)
+        idx = np.concatenate([by_event[e] for e in pick])
+        sample = df.iloc[idx]
+        m = LightGBMPaceModel(spec, params={"n_estimators": n_estimators}, seed=seed + i)
+        m.fit(sample, sample[TARGET])
+        models.append(m)
+    return models
