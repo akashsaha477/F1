@@ -421,3 +421,108 @@ class ProfileService:
         out["head_to_head"] = {"sessions": records(h), "summary": summary}
         out["meta"] = clean_value(self.meta)
         return out
+
+
+class TrackService:
+    """Track maps, corner definitions and corner-level driver metrics (gold tables from Phase 4)."""
+
+    def __init__(self, paths: DataPaths):
+        self.paths = paths
+
+    @cached_property
+    def sessions(self) -> pd.DataFrame:
+        rows = read_json(self.paths.gold("corner_definitions") / "sessions.json", default=[])
+        df = pd.DataFrame(rows)
+        if len(df):
+            df["date"] = pd.to_datetime(df["date"])
+        return df
+
+    def _sessions_for(self, circuit_id: str) -> pd.DataFrame:
+        if self.sessions.empty:
+            raise NotFound("corner analysis not built; run scripts/build_features.py")
+        s = self.sessions[self.sessions["circuit_id"] == circuit_id].sort_values("date")
+        if s.empty:
+            raise NotFound(f"no telemetry-based track analysis for circuit {circuit_id}")
+        return s
+
+    def _pick(self, circuit_id: str, session_id: str | None) -> pd.Series:
+        s = self._sessions_for(circuit_id)
+        if session_id:
+            hit = s[s["session_id"] == session_id]
+            if hit.empty:
+                raise NotFound(f"session {session_id} has no track analysis at {circuit_id}")
+            return hit.iloc[0]
+        return s.iloc[-1]
+
+    def layout(self, circuit_id: str, session_id: str | None = None) -> dict:
+        row = self._pick(circuit_id, session_id)
+        sid = row["session_id"]
+        track = read_partition(self.paths.gold("track_maps"), sid)
+        defs = read_partition(self.paths.gold("corner_definitions"), sid)
+        inferred = read_partition(self.paths.gold("inferred_segments"), sid)
+        sectors = read_partition(self.paths.gold("sector_profiles"), sid)
+        avail = self._sessions_for(circuit_id)[["session_id", "season", "circuit_layout_id", "reference_driver", "reference_lap_time_s"]]
+        defs = defs.drop(columns=[c for c in ("labels",) if c in defs.columns])
+        return {
+            "circuit_id": circuit_id, "session_id": sid, "season": int(row["season"]), "layout_id": row.get("circuit_layout_id"),
+            "rotation_deg": float(row.get("rotation_deg") or 0.0), "length_m": float(row["length_m"]),
+            "reference": {"driver_id": row["reference_driver"], "lap": int(row["reference_lap"]),
+                          "lap_time_s": float(row["reference_lap_time_s"])},
+            "segmentation_method": row.get("segmentation_method"),
+            "marker_validation": clean_value(row.get("marker_validation")),
+            "alignment": clean_value(pd.DataFrame(row.get("alignment") or []).describe().to_dict()) if row.get("alignment") else None,
+            "sector_bounds_m": clean_value(row.get("sector_bounds_m")),
+            "track": records(track[["s", "x", "y", "speed_ref", "throttle_ref"]]),
+            "corners": records(defs), "inferred_segments": records(inferred), "sectors": records(sectors),
+            "available_sessions": records(avail),
+            "category_rules": __import__("apexlens.track_geometry.corners", fromlist=["CORNER_RULES"]).CORNER_RULES,
+            "notes": ["Numbered corners come from FastF1 circuit markers; S-labelled segments are inferred from path "
+                      "curvature and are not official corner numbers.",
+                      "Corner categories are ApexLens conventions based on the reference lap's minimum speed, not FIA "
+                      "classifications."],
+        }
+
+    def performance(self, circuit_id: str, session_id: str | None = None, corner_id: str | None = None) -> dict:
+        row = self._pick(circuit_id, session_id)
+        sid = row["session_id"]
+        m = read_partition(self.paths.gold("corner_metrics"), sid)
+        if corner_id:
+            m = m[m["corner_id"] == corner_id]
+        cols = ["driver_id", "constructor_id", "lap_number", "lap_time_s", "corner_id", "category", "sector", "segment_time_s",
+                "delta_to_best_s", "delta_to_teammate_s", "teammate_comparable", "entry_speed_kph", "min_speed_kph",
+                "exit_speed_kph", "brake_onset_before_apex_m", "braking_duration_s", "full_throttle_delay_s",
+                "full_throttle_after_apex_m", "min_gear", "max_decel_proxy_ms2", "quality", "compound"]
+        m = m[[c for c in cols if c in m.columns]]
+        # across all analysed sessions at this circuit: who gains relative to the team-mate in each corner?
+        all_m = pd.concat([read_partition(self.paths.gold("corner_metrics"), s)
+                           for s in self._sessions_for(circuit_id)["session_id"]], ignore_index=True)
+        if corner_id:
+            all_m = all_m[all_m["corner_id"] == corner_id]
+        tm = all_m[all_m["delta_to_teammate_s"].notna()]
+        hist = (tm.groupby("driver_id").agg(mean_delta_to_teammate_s=("delta_to_teammate_s", "mean"),
+                                            n_corner_laps=("delta_to_teammate_s", "size"),
+                                            n_sessions=("session_id", "nunique")).reset_index()
+                .sort_values("mean_delta_to_teammate_s"))
+        return {"circuit_id": circuit_id, "session_id": sid, "corner_id": corner_id, "metrics": records(m),
+                "teammate_relative_history": records(hist),
+                "measured_vs_derived": {
+                    "measured": ["speed", "throttle", "brake on/off", "gear", "position"],
+                    "derived": ["segment time (interpolated at window boundaries)", "braking onset and duration (on/off brake channel)",
+                                "minimum-speed-to-full-throttle time", "deceleration proxy dv/dt (not a force measurement)"]},
+                "notes": ["Fastest qualifying lap per driver only (bounded ingestion).",
+                          "Team-mate deltas only when both laps were set in the same part of qualifying with lap times within 1.5%."]}
+
+    def driver_corner_profile(self, driver_id: str) -> dict:
+        p = read_table(self.paths.gold("driver_corner_profiles"))
+        p = p[p["driver_id"] == driver_id] if len(p) else p
+        exp = read_json(self.paths.models / "evaluation_runs" / "corner_experiments.json", default={})
+        return {"driver_id": driver_id, "profile": records(p), "reliability": clean_value(exp.get("specialisation_reliability")),
+                "note": "Team-mate-relative qualifying segment-time deltas per corner category (negative = faster than team-mate)."}
+
+    def summary(self) -> dict:
+        exp = read_json(self.paths.models / "evaluation_runs" / "corner_experiments.json", default={})
+        s = self.sessions
+        val = pd.json_normalize(s["marker_validation"].tolist()) if len(s) else pd.DataFrame()
+        return {"n_sessions": int(len(s)), "circuits": sorted(s["circuit_id"].dropna().unique().tolist()) if len(s) else [],
+                "marker_validation": clean_value(val.describe().to_dict()) if len(val) else None,
+                "experiments": clean_value(exp)}

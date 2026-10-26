@@ -13,7 +13,7 @@ from fastapi.responses import JSONResponse
 
 from apexlens import __version__
 from apexlens.api.deps import paths
-from apexlens.api.routes import catalog, drivers, models, predictions, sessions
+from apexlens.api.routes import catalog, drivers, models, predictions, sessions, tracks
 from apexlens.config import get_settings
 from apexlens.predictions.service import ScenarioError
 from apexlens.services.data_service import NotFound
@@ -65,7 +65,8 @@ def create_app() -> FastAPI:
                 "data": {"silver": (p.processed / "laps").exists(), "gold": (p.features / "lap_features").exists(),
                          "models": (p.models / "production.json").exists()}}
 
-    for r in (catalog.router, sessions.router, drivers.router, drivers.effects_router, predictions.router, models.router):
+    for r in (catalog.router, sessions.router, drivers.router, drivers.effects_router, predictions.router, models.router,
+              tracks.router):
         app.include_router(r, prefix="/api")
     return app
 

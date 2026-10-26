@@ -415,3 +415,89 @@ export interface DriverCompare {
   };
   meta: ProfileMeta;
 }
+
+export interface CornerDef {
+  corner_id: string;
+  method: string;
+  n_markers: number;
+  entry_s: number;
+  apex_s: number;
+  exit_s: number;
+  length_m: number;
+  heading_change_deg: number;
+  direction: string;
+  entry_speed_ref: number;
+  min_speed_ref: number;
+  exit_speed_ref: number;
+  min_throttle_ref: number;
+  x: number;
+  y: number;
+  category: "slow" | "medium" | "fast" | "flat_out";
+  is_hairpin: boolean;
+  is_chicane: boolean;
+  is_esses?: boolean;
+  is_sweeper: boolean;
+  is_sequence: boolean;
+  sector: number | null;
+}
+
+export interface TrackLayout {
+  circuit_id: string;
+  session_id: string;
+  season: number;
+  layout_id: string | null;
+  rotation_deg: number;
+  length_m: number;
+  reference: { driver_id: string; lap: number; lap_time_s: number };
+  segmentation_method: string;
+  marker_validation: Record<string, number | string | null>;
+  sector_bounds_m: [number, number] | null;
+  track: { s: number; x: number; y: number; speed_ref: number | null; throttle_ref: number | null }[];
+  corners: CornerDef[];
+  inferred_segments: { segment_id: string; apex_s: number; heading_change_deg: number }[];
+  sectors: { sector: number; length_m: number; frac_slow: number; frac_medium: number; frac_fast: number; full_throttle_frac: number }[];
+  available_sessions: { session_id: string; season: number; circuit_layout_id: string; reference_driver: string; reference_lap_time_s: number }[];
+  category_rules: Record<string, number>;
+  notes: string[];
+}
+
+export interface CornerMetric {
+  driver_id: string;
+  constructor_id: string;
+  lap_number: number;
+  lap_time_s: number;
+  corner_id: string;
+  category: string;
+  sector: number | null;
+  segment_time_s: number;
+  delta_to_best_s: number | null;
+  delta_to_teammate_s: number | null;
+  teammate_comparable: boolean;
+  entry_speed_kph: number;
+  min_speed_kph: number;
+  exit_speed_kph: number;
+  brake_onset_before_apex_m: number | null;
+  braking_duration_s: number | null;
+  full_throttle_delay_s: number | null;
+  min_gear: number | null;
+  max_decel_proxy_ms2: number | null;
+  quality: string;
+}
+
+export interface TrackPerformance {
+  circuit_id: string;
+  session_id: string;
+  corner_id: string | null;
+  metrics: CornerMetric[];
+  teammate_relative_history: { driver_id: string; mean_delta_to_teammate_s: number; n_corner_laps: number; n_sessions: number }[];
+  measured_vs_derived: { measured: string[]; derived: string[] };
+  notes: string[];
+}
+
+export interface TelemetryResponse {
+  session_id: string;
+  available_laps: { driver_id: string; lap_number: number; lap_time_s: number; selection: string; quality_status: string }[];
+  samples?: { driver_id: string; lap_number: number; time_s: number; distance_m: number; speed_kph: number; throttle_pct: number; brake: boolean; gear: number }[];
+  channels?: { measured: string[]; derived: string[]; unavailable: string[] };
+  note?: string;
+}

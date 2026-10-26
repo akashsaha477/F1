@@ -254,7 +254,15 @@ def build_profiles(paths: DataPaths) -> dict:
     circuits = read_table(paths.silver("circuits"))[["circuit_id", "type"]]
     d2 = dry.merge(circuits, on="circuit_id", how="left")
     d2["var"] = d2["se"] ** 2 + res.variances["residual"]
-    for dim, mask in [("street_circuit", d2["type"] == "STREET")]:
+    dims = [("street_circuit", d2["type"] == "STREET")]
+    cprof = read_table(paths.gold("circuit_profiles"))
+    if len(cprof):
+        d2 = d2.merge(cprof[["circuit_id", "circuit_frac_fast", "circuit_frac_slow"]], on="circuit_id", how="left")
+        hi_fast = cprof["circuit_frac_fast"].quantile(2 / 3)
+        hi_slow = cprof["circuit_frac_slow"].quantile(2 / 3)
+        dims += [("high_speed_circuit", d2["circuit_frac_fast"] >= hi_fast),
+                 ("slow_corner_circuit", d2["circuit_frac_slow"] >= hi_slow)]
+    for dim, mask in dims:
         a = d2[mask]
         b = d2[~mask]
         da = condition_deviation(a, "resid", "var").set_index("driver_id")
@@ -280,6 +288,13 @@ def build_profiles(paths: DataPaths) -> dict:
         "quali_model": {"variances": qres.variances, "n_obs": qres.n_obs, "loglik": qres.loglik, "converged": qres.converged,
                         "formula": f"quali_gap_pct ~ event (fixed) + (1|driver) + (1|driver:season) + (1|team:season); dry, gap <= {QUALI_MAX_GAP}%"},
         "seasons": seasons, "n_sessions_adjusted": int(adj["session_id"].nunique()),
+        "condition_definitions": {
+            "wet_race": "wet-tyre race sessions; per-session regression of adjusted pace on dry-model expectation",
+            "wet_qualifying": "wet qualifying sessions; same regression on qualifying gap to pole",
+            "street_circuit": "F1DB circuit type STREET vs all other dry races (model residuals)",
+            "high_speed_circuit": "circuits in the top third of share of fast corners (>= 200 km/h minimum speed)",
+            "slow_corner_circuit": "circuits in the top third of share of slow corners (< 125 km/h minimum speed)",
+        },
         "stage1_adjustments": adj["adjusted_for"].value_counts().to_dict(),
         "thresholds": {"min_events_for_rank": MIN_EVENTS_FOR_RANK, "wet_min_sessions": WET_MIN_SESSIONS,
                        "wet_min_laps": WET_MIN_LAPS, "condition_min_sessions": COND_MIN_SESSIONS, "quali_max_gap": QUALI_MAX_GAP},

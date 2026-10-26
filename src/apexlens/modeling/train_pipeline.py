@@ -155,3 +155,15 @@ def horizon_gain(paths: DataPaths, run: dict, n_boot: int = 300) -> dict | None:
     return {part: M.paired_mae_difference(g, "pre_race", "pre_event", n_boot=n_boot)
             for part, g in (("development", d[d.season < holdout]), ("holdout", d[d.season == holdout]))}
 
+
+
+def run_corner_experiments(paths: DataPaths, n_boot: int = 300) -> dict:
+    """Model B and the corner-specialisation reliability test; stored next to the lap-pace runs."""
+    from apexlens.features.corner_metrics import specialisation_reliability
+    from apexlens.modeling.sector_model import evaluate_corner_profile_value
+
+    res = {"run_at": datetime.now(UTC).isoformat(timespec="seconds"), "dataset_version": dataset_version(paths),
+           "sector_model": evaluate_corner_profile_value(paths, n_boot=n_boot),
+           "specialisation_reliability": specialisation_reliability(paths)}
+    write_json(paths.models / "evaluation_runs" / "corner_experiments.json", res)
+    return res

@@ -59,3 +59,15 @@ def test_profile_endpoints(client):
     cmp = client.get("/api/drivers/compare", params={"ids": "lando-norris,oscar-piastri", "season": 2025}).json()
     assert cmp["head_to_head"]["summary"]["n_same_team"] > 10
     assert client.get("/api/drivers/juan-manuel-fangio/profile").status_code == 404
+
+
+def test_track_endpoints(client):
+    lay = client.get("/api/circuits/silverstone/layout").json()
+    assert lay["corners"] and lay["track"] and lay["marker_validation"]["status"] in ("markers_used", "markers_rejected_off_path")
+    assert {c["category"] for c in lay["corners"]} <= {"slow", "medium", "fast", "flat_out"}
+    perf = client.get("/api/circuits/silverstone/performance", params={"corner_id": lay["corners"][2]["corner_id"]}).json()
+    assert perf["metrics"] and "derived" in perf["measured_vs_derived"]
+    assert client.get("/api/circuits/not-a-circuit/layout").status_code == 404
+    assert client.get("/api/circuits/silverstone/layout", params={"session_id": "bad"}).status_code == 422
+    summary = client.get("/api/corner-analysis").json()
+    assert summary["n_sessions"] > 50

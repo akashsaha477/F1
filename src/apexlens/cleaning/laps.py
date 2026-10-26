@@ -88,9 +88,17 @@ def tracinginsights_rcm_to_frame(payload: dict) -> pd.DataFrame:
     return df
 
 
+CORNER_KEYS = {"CornerNumber": "Number", "X": "X", "Y": "Y", "Angle": "Angle", "Distance": "Distance",
+               "CornerLetter": "Letter", "Letter": "Letter", "SectionType": "SectionType"}
+
+
 def tracinginsights_corners_to_frame(payload: dict) -> tuple[pd.DataFrame, float | None]:
+    """Corner markers. Newer files also carry longer arrays (track outline, marshal sectors), so only the
+    arrays as long as ``CornerNumber`` are taken."""
     rotation = payload.get("Rotation")
-    df = columnar_to_frame(payload, {"CornerNumber": "Number"})
+    n = len(payload.get("CornerNumber", []))
+    cols = {CORNER_KEYS[k]: v for k, v in payload.items() if k in CORNER_KEYS and isinstance(v, list) and len(v) == n}
+    df = pd.DataFrame(cols)
     if "Letter" not in df.columns:
         df["Letter"] = ""
     return df, (float(rotation) if rotation is not None else None)

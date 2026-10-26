@@ -50,3 +50,22 @@ Findings (2022–2025): race-pace variance components — driver 0.104, driver-s
 residual 0.110 (%²). Once dry pace and car are accounted for, no driver's wet-race, wet-qualifying or
 street-circuit deviation is distinguishable from zero (estimated between-driver variance ≈ 0 for street and wet
 qualifying, τ ≈ 0.14% for wet races); the application reports these as such instead of ranking drivers.
+
+## Phase 4 — track geometry and corner analysis
+- [x] Reference path per qualifying session from the fastest telemetry lap: uniform 2 m resampling, Savitzky–Golay smoothing, heading and curvature (`track_geometry/geometry.py`)
+- [x] Lap alignment by guided projection (nearest point within ±150 m of the lap's own integrated distance) — robust to self-crossing circuits; median lateral offset ≈ 0.5 m
+- [x] Corner segmentation: FastF1 corner markers (gated: rejected when off the driven path) and an independent curvature method used for validation and as fallback; close markers grouped into complexes; unique corner IDs
+- [x] Explicit, adjustable category rules (slow / medium / fast / flat-out; hairpin, chicane, esses, sweeper, sequence flags) — ApexLens conventions, not FIA classifications
+- [x] Per-lap corner metrics (segment time, entry/min/exit speed, braking onset and duration from the on/off channel, minimum-speed-to-full-throttle time, gears, dv/dt proxy) with sample-density and plausibility quality flags
+- [x] Team-mate corner deltas only for comparable runs (same qualifying segment / within 15 min, lap times within 1.5%)
+- [x] Sector boundaries from sector times on the telemetry laps; sector corner composition; circuit profiles feeding Model A and the fingerprint
+- [x] Model B (sector pace): driver corner-category profile vs. no profile, walk-forward
+- [x] API: `/api/circuits/{id}/layout|corners|performance`, `/api/drivers/{id}/corner-profile`, `/api/corner-analysis`
+- [x] Frontend: Track explorer (SVG map with speed shading and two-driver colouring, corner table, corner detail, speed/throttle traces)
+
+Validation and findings (92 qualifying sessions, 2022–2025): marker sets used in 91 sessions (1 rejected as
+off-path: 2022 São Paulo); curvature-inferred corners match markers with precision 0.96 / recall 0.85, median
+apex error 10 m. Overall team-mate corner deltas are only weakly repeatable (split-half r = 0.24, permutation
+p ≈ 0.07); slow-vs-fast corner *specialisation* is not repeatable (r = −0.06, p ≈ 0.63). Adding driver
+corner-category profiles to the sector model does not reduce error (ΔMAE −0.002 pp, 95% CI −0.004…+0.0005).
+No driver × circuit-type deviation (street, high-speed, slow-corner circuits) is distinguishable from zero.
