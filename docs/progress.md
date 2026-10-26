@@ -95,3 +95,21 @@ nothing (+0.002 pp). Soft degrades faster than medium and hard in every season; 
 - [x] Methodology service (`/api/methodology`) as the single source for cleaning rules, model descriptions, leakage controls and limitations
 - [x] Frontend pages: Tyre & weather lab, Race & lap explorer (lap times with exclusion reasons, stints, weather, results, race control), Scenario laboratory, Data & methodology — all nine pages in place
 - [x] Frontend tests for the new pages; backend tests for tyre slopes and clustering
+
+## Phase 8 — evaluation and error analysis
+- [x] Stored walk-forward predictions now keep lap context (tyre age, lap number, race phase, sprint flag, driver experience, circuit history) for error analysis
+- [x] Error analysis (`evaluation/error_analysis.py`): errors, bias, skill vs baseline and interval coverage by condition, compound, session type, tyre age, race phase, driver experience and circuit novelty; group contrasts with event-cluster bootstrap CIs; largest event errors; per-team half-season bias; within-session driver ordering (Spearman)
+- [x] Feature-group ablations (cumulative and leave-one-group-out) and explanation validation re-run on the final models
+- [x] Data-quality tests: every check fires on its defect (synthetic edits of real fixtures) and invariants of the ingested dataset (unique lap keys, clean/exclusion consistency, reference = median clean lap, target definition, form uses only earlier events)
+- [x] Model registry: `is_production` follows the production pointer, so superseded versions are no longer listed as production
+
+Findings (run 20261026T182248Z): retraining reproduces the same versions and metrics. Wet laps are the one
+significantly worse group (MAE +0.48 pp vs dry, CI +0.31…+0.70; holdout coverage 74%). Differences by tyre age,
+race phase, sprint vs grand prix, driver experience and circuit novelty are not significant. Form features lag
+car development: e.g. McLaren 2023 is predicted 0.37% too slow in the second half of the season. Within a
+session LightGBM orders drivers with median Spearman 0.81 (pre-event) and 0.86 (pre-race). Ablations: race
+context and tyre features carry most of the signal; dropping team features slightly *improves* the 2025
+holdout (−0.010 pp, CI −0.017…−0.004), consistent with driver form already containing the car; corner and
+driver × circuit features add nothing. Explanations are exact (additivity error 1e-14, identical to the `shap`
+library), stable across bootstrap refits (top-3 sign agreement 0.998) and only moderately aligned with Ridge
+(Spearman 0.50), as expected with correlated team-form inputs.

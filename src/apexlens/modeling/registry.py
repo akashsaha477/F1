@@ -51,11 +51,16 @@ def load_artifact(models_dir: Path, version: str):
 
 
 def list_models(models_dir: Path) -> list[dict]:
+    """All stored models. ``is_production`` follows the production pointer, not the flag saved at training
+    time (older versions keep their original metadata after being superseded)."""
+    prod = set(read_json(Path(models_dir) / "production.json", default={}).values())
     out = []
     for d in sorted(Path(models_dir).glob("*/metadata.json")):
         m = read_json(d)
-        out.append({k: m.get(k) for k in ("model_version", "task", "model", "horizon", "saved_at", "train_period",
-                                           "is_production", "target", "test_metrics")})
+        row = {k: m.get(k) for k in ("model_version", "task", "model", "horizon", "saved_at", "train_period", "target",
+                                     "test_metrics")}
+        row["is_production"] = m.get("model_version") in prod
+        out.append(row)
     return out
 
 

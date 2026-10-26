@@ -49,6 +49,9 @@ WEATHER = ["track_temp_c", "air_temp_c", "humidity_pct", "rainfall", "is_wet_com
 RACE = ["race_progress", "lap_number", "is_sprint"]
 INTERACTION = ["drv_circuit_hist"]
 WEEKEND = ["evt_quali_gap", "evt_team_quali_gap"]
+# kept with stored predictions for error analysis (not model inputs by themselves)
+CONTEXT = ["lap_number", "tyre_life_laps", "race_progress", "is_sprint", "drv_form_n", "drv_circuit_hist", "circuit_ref_lap_s",
+           "track_temp_c"]
 
 GROUPS = {"driver": DRIVER, "team": TEAM, "track": TRACK, "corner": CORNER, "tyre": TYRE + ["compound"],
           "weather": WEATHER, "race_context": RACE, "interaction": INTERACTION, "weekend": WEEKEND}
@@ -105,6 +108,9 @@ def fit_predict_split(df: pd.DataFrame, split: Split, spec: FeatureSpec, models:
     tr, ca, te = df.loc[split.train_idx], df.loc[split.calib_idx], df.loc[split.test_idx]
     out = te[["event_id", "session_id", "season", "driver_id", "constructor_id", "circuit_id", "compound", "condition",
               "is_wet_compound", "session_ref_s", TARGET]].copy().rename(columns={TARGET: "y"})
+    for c in CONTEXT:
+        if c in te.columns:
+            out[c] = te[c].to_numpy()
     fitted = {}
     for name, model in models.items():
         t0 = time.time()

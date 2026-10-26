@@ -34,3 +34,13 @@ def test_registry_records_and_summarises(tmp_path):
     assert summary[("f1db", "season_races")]["bytes"] == 15
     assert summary[("tracinginsights", "weather")]["n_missing"] == 1
     assert summary[("f1db", "season_races")]["licence"].startswith("CC BY")
+
+
+def test_production_flag_follows_pointer(tmp_path):
+    from apexlens.modeling.registry import list_models, save_artifact, set_production
+
+    for v in ("task-a-old", "task-a-new"):
+        save_artifact(tmp_path, v, {"model": None}, {"task": "task", "is_production": True})
+    set_production(tmp_path, "task", "task-a-new")
+    flags = {m["model_version"]: m["is_production"] for m in list_models(tmp_path)}
+    assert flags == {"task-a-old": False, "task-a-new": True}
