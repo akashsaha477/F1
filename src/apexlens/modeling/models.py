@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
+from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import RidgeCV
@@ -33,6 +34,28 @@ class FeatureSpec:
     @property
     def all(self) -> list[str]:
         return self.numeric + self.categorical
+
+
+class QuantileClipper(BaseEstimator, TransformerMixin):
+    """Winsorise each column to its training [q, 1-q] range so linear terms cannot extrapolate wildly."""
+
+    def __init__(self, q: float = 0.01):
+        self.q = q
+
+    def fit(self, X, y=None):
+        X = np.asarray(X, dtype=float)
+        self.lo_ = np.nanquantile(X, self.q, axis=0) if len(X) else np.zeros(X.shape[1])
+        self.hi_ = np.nanquantile(X, 1 - self.q, axis=0) if len(X) else np.zeros(X.shape[1])
+        return self
+
+    def transform(self, X):
+        X = np.asarray(X, dtype=float)
+        lo = np.where(np.isnan(self.lo_), -np.inf, self.lo_)
+        hi = np.where(np.isnan(self.hi_), np.inf, self.hi_)
+        return np.clip(X, lo, hi)
+
+    def get_feature_names_out(self, input_features=None):
+        return np.asarray(input_features, dtype=object)
 
 
 def add_interactions(X: pd.DataFrame) -> pd.DataFrame:
@@ -70,12 +93,14 @@ class LinearPaceModel:
     def fit(self, X: pd.DataFrame, y, **_):
         X = add_interactions(X)
         lin = [c for c in self.spec.numeric if c not in self.spec.spline] + [c for c in X.columns if c.startswith("tyre_life_x_")]
-        transformers = [("num", Pipeline([("imp", SimpleImputer(strategy="median", add_indicator=True,
-                                                                 keep_empty_features=True)),
+        transformers = [("num", Pipeline([("clip", QuantileClipper()),
+                                          ("imp", SimpleImputer(strategy="median", add_indicator=True,
+                                                                keep_empty_features=True)),
                                           ("sc", StandardScaler())]), lin),
                         ("cat", OneHotEncoder(handle_unknown="ignore", categories=[COMPOUNDS]), self.spec.categorical)]
         if self.spec.spline:
-            transformers.append(("spl", Pipeline([("imp", SimpleImputer(strategy="median", keep_empty_features=True)),
+            transformers.append(("spl", Pipeline([("clip", QuantileClipper()),
+                                                  ("imp", SimpleImputer(strategy="median", keep_empty_features=True)),
                                                   ("sp", SplineTransformer(n_knots=self.n_knots, degree=3,
                                                                            extrapolation="constant"))]),
                                  self.spec.spline))
@@ -113,7 +138,8 @@ class LightGBMPaceModel:
     def __init__(self, spec: FeatureSpec, params: dict | None = None, seed: int = 42):
         self.spec = spec
         self.seed = seed
-        self.params = {"n_estimators": 2000, "learning_rate": 0.03, "num_leaves": 31, "min_child_samples": 200,
+        self.params = {"objective": "huber", "alpha": 1.0, "n_estimators": 2000, "learning_rate": 0.03,
+                       "num_leaves": 31, "min_child_samples": 200,
                        "subsample": 0.8, "subsample_freq": 1, "colsample_bytree": 0.8, "reg_lambda": 1.0,
                        "verbose": -1, **(params or {})}
 

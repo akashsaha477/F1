@@ -21,6 +21,7 @@ log = logging.getLogger(__name__)
 HALF_LIFE_EVENTS = 4.0
 REPRESENTATIVE_MAX_SLOWDOWN = 0.05  # laps > 5% slower than the driver's session median are not representative
 MIN_LAPS_DRIVER_SESSION = 5
+FORM_N_CAP = 10
 RACE_CODES = ("R", "S")
 
 LAP_COLUMNS = [
@@ -125,7 +126,10 @@ def driver_event_form(summary: pd.DataFrame, quali: pd.DataFrame, events: pd.Dat
     order = ["date", "event_id"]
     base = base.sort_values(order).reset_index(drop=True)
     base["drv_form_pace"] = _ewm_prior(base, "driver_id", "pace_dry", order)
-    base["drv_form_n"] = base.groupby("driver_id")["pace_dry"].transform(lambda s: s.shift(1).notna().cumsum())
+    # evidence count behind drv_form_pace; capped because the EWMA (half-life 4) is saturated by ~10 events
+    # and an uncapped count would only encode "time since the dataset starts".
+    base["drv_form_n"] = base.groupby("driver_id")["pace_dry"].transform(
+        lambda s: s.shift(1).notna().cumsum()).clip(upper=FORM_N_CAP)
     base["drv_teammate_gap_form"] = _ewm_prior(base, "driver_id", "tm_gap", order)
     base["drv_quali_form"] = _ewm_prior(base, "driver_id", "quali_gap_pct", order)
 
