@@ -718,7 +718,9 @@ def model_card(ctx: Ctx) -> str:
             "* Form features lag in-season car development; a team that upgrades strongly is predicted too slow for several events.",
             "* New circuits, rookies and wet races have little or no history; the API flags these cases as extrapolation.",
             *[f"* {m}" for m in failure_modes],
-            "* Trained on 2022–2025 ground-effect cars; not valid for the 2026 regulations.\n",
+            "* The 2026 season introduced new technical regulations. 2026 races are included as they happen, but most "
+            "training laps come from 2022–2025 cars; compare the 2026 fold with earlier ones before relying on 2026 "
+            "predictions.\n",
             "## Ethical and legal notes\n",
             "Timing data is unofficial (FastF1 export); F1DB is CC BY 4.0. Driver comparisons are statistical summaries "
             "with uncertainty, not judgements of people. ApexLens is not associated with Formula 1, the FIA or any team.\n"]

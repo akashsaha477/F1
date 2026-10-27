@@ -13,7 +13,7 @@ describe how models use their inputs; they are associations learned from observa
 ## Highlights
 
 * **Real, traceable data** — F1DB (results and identities, 1950–present) and a public FastF1 export
-  (every lap, tyre, weather, race-control message and qualifying telemetry for 2022–2025). Every record
+  (every lap, tyre, weather, race-control message and qualifying telemetry for 2022–2026). Every record
   is linked to its source in a provenance registry; nothing is synthesised.
 * **Driver vs car** — a two-stage model (per-session condition adjustment, then crossed random effects for
   driver, driver-season and team-season, fitted by REML) separates driver pace from car pace, with
@@ -25,8 +25,13 @@ describe how models use their inputs; they are associations learned from observa
   narratives, counterfactuals, and a validation suite for the explanations themselves.
 * **Track geometry** — circuit paths, corner segmentation and classification from telemetry, and
   team-mate corner deltas restricted to comparable laps.
-* **Nine-page dashboard** — overview, driver explorer, driver comparison, track explorer, tyre & weather
-  lab, race & lap explorer, explain a prediction, scenario laboratory, data & methodology.
+* **Race week planner** — pick a race weekend, a driver and (optionally) another team's car: weather
+  (forecast, weekend sessions or circuit history), the best dry tyre strategy with pit windows from an
+  exact optimisation, expected lap times, the predicted finishing order — and for past races what really
+  happened, plus a backtest of every race since 2023 against what the top-10 actually did.
+* **Ten-page dashboard** — overview, race week planner, driver explorer, driver comparison, track
+  explorer, tyre & weather lab, race & lap explorer, explain a prediction, scenario laboratory, data &
+  methodology.
 
 | Explain a prediction | Track explorer |
 |---|---|
@@ -76,7 +81,7 @@ Without `make`:
 
 ```bash
 python -m venv .venv && . .venv/bin/activate && pip install -e ".[dev]"
-python scripts/ingest_season.py --seasons 2022-2025 --telemetry
+python scripts/ingest_season.py --seasons 2022-2026 --telemetry
 python scripts/build_features.py
 python scripts/train_models.py
 python scripts/evaluate_models.py
@@ -121,6 +126,7 @@ FastAPI with OpenAPI docs at `/docs`. Main endpoints:
 | Tyres | `GET /api/tyres/degradation`, `POST /api/predict/tyre-degradation` |
 | Predictions | `POST /api/predict/lap-time`, `/predict/driver-comparison`, `/explain`, `/scenarios` |
 | Models | `GET /api/models`, `/models/{v}/metrics`, `/models/{v}/explanations`, `/models/{v}/explanation-validation`, `/evaluation`, `/experiments` |
+| Race week | `GET /api/strategy/race-weeks`, `POST /api/strategy/plan`, `GET /api/strategy/backtest` |
 
 Errors are structured (`{"error": {"code": ..., "message": ...}}`); invalid or unsupported requests
 return 422 with the reason, and predictions flag extrapolation and thin evidence in `warnings`.
@@ -129,7 +135,7 @@ return 422 with the reason, and predictions flag extrapolation and thin evidence
 
 ```
 src/apexlens/      data_sources · ingestion · cleaning · features · track_geometry · driver_profiles
-                   modeling · evaluation · explainability · predictions · services · api · reporting
+                   modeling · evaluation · explainability · predictions · strategy · services · api · reporting
 scripts/           ingest_season · update_event · build_features · train_models · evaluate_models · generate_reports
 frontend/          React + TypeScript + Vite + Tailwind + ECharts dashboard
 tests/             unit · data_quality · modeling · integration (fixtures are real data excerpts)
@@ -143,7 +149,7 @@ data/              cache, raw (bronze), processed (silver), features (gold), mod
 * [Architecture](docs/architecture.md) · [Data sources](docs/data_sources.md) · [Methodology](docs/methodology.md)
 * [Evaluation protocol](docs/evaluation_protocol.md) · [Limitations](docs/limitations.md)
 * Generated: [Data dictionary](docs/data_dictionary.md) · [Feature definitions](docs/feature_definitions.md) · [Model card](docs/model_card.md)
-* [Reports](reports/README.md): coverage, EDA, feature engineering, driver profiles, model comparison, error analysis, explainability
+* [Reports](reports/README.md): coverage, EDA, feature engineering, driver profiles, model comparison, error analysis, explainability, race strategy backtest
 * [Implementation plan](docs/implementation_plan.md) · [Progress log](docs/progress.md)
 
 ## Testing
@@ -163,7 +169,8 @@ build, and builds both Docker images.
 Official F1 live timing, Jolpica and OpenF1 were unreachable from the build environment, so lap-level
 data comes from a public FastF1 export; the official-source adapters exist but are only mock-tested.
 Telemetry is one qualifying lap per driver and session; brake is on/off; fuel, setup and traffic are not
-observed; wet-weather evidence is sparse; the models cover 2022–2025 cars only. See
+observed; wet-weather evidence is sparse; most training data comes from 2022–2025 cars, while 2026 brought
+new regulations. See
 [docs/limitations.md](docs/limitations.md).
 
 ## Licence and attribution

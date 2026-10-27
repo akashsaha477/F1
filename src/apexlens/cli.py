@@ -91,7 +91,7 @@ def build_parser() -> argparse.ArgumentParser:
     sub = p.add_subparsers(dest="command", required=True)
 
     s = sub.add_parser("ingest-f1db", help="historical results and canonical entities from F1DB")
-    s.add_argument("--seasons", help="e.g. 2022-2025 or 2023,2024 (default: configured seasons)")
+    s.add_argument("--seasons", help="e.g. 2022-2026 or 2023,2024 (default: configured seasons)")
     s.add_argument("--all-history", action="store_true", help="every season available in F1DB (1950-present)")
     s.set_defaults(func=cmd_ingest_f1db)
 

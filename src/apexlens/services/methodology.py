@@ -80,7 +80,8 @@ METHODOLOGY = {
         "Fuel load, setup, team orders, damage and traffic are not observed; race phase and lap filters are proxies.",
         "Driver and car effects are only separated through team-mate comparisons and drivers who changed teams.",
         "Wet-weather evidence is sparse; condition-specific estimates are shrunk and often reported as insufficient.",
-        "The 2026 season uses new regulations; the models are trained on 2022-2025 and are not valid for 2026 cars.",
+        "The 2026 season introduced new technical regulations. 2026 races are included as they are ingested (form and tyre-wear "
+        "estimates weight recent races most), but most training data comes from 2022-2025 cars.",
         "All explanations describe associations learned by models, never causal effects.",
         "Race week plans are for dry races without safety cars; in the backtest they match the top-10's choices about "
         "as often as copying the previous race at the same circuit.",

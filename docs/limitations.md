@@ -9,9 +9,10 @@ What ApexLens cannot tell you, and why. The dashboard's *Data & methodology* pag
 * **Unofficial timing source.** Official F1 live timing, Jolpica and OpenF1 were unreachable from the
   build environment. Lap-level data comes from a public FastF1 export (TracingInsights). The FastF1,
   Jolpica and OpenF1 adapters exist but are only tested against recorded/mocked responses.
-* **Four seasons.** Lap-level data covers 2022–2025 (one regulation era). F1DB results go back to 1950
-  but are not used for lap-level models. The 2026 cars follow new regulations; the models are not valid
-  for them.
+* **Five seasons.** Lap-level data covers 2022–2026 (2026 up to the last ingested race). F1DB results go
+  back to 1950 but are not used for lap-level models. 2026 introduced new technical regulations: form
+  and tyre-wear estimates weight recent races most, but most training laps come from 2022–2025 cars,
+  so check the 2026 fold of the evaluation before trusting 2026 predictions.
 * **Telemetry is thin.** One lap per driver and qualifying session (the fastest clean lap). Corner
   metrics therefore describe single-lap qualifying pace, not race pace or tyre management.
 * **Missing channels.** Brake is on/off only; there is no brake pressure, steering angle, tyre
