@@ -19,7 +19,7 @@ class Settings(BaseSettings):
 
     data_dir: Path = Field(default=REPO_ROOT / "data")
     reports_dir: Path = Field(default=REPO_ROOT / "reports")
-    default_seasons: str = "2022,2023,2024,2025"
+    default_seasons: str = "2022,2023,2024,2025,2026"
 
     http_timeout_s: float = 30.0
     http_max_retries: int = 4

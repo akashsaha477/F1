@@ -169,7 +169,7 @@ observed; wet-weather evidence is sparse; the models cover 2022–2025 cars only
 ## Licence and attribution
 
 Code: MIT ([LICENSE](LICENSE)). Data: [F1DB](https://github.com/f1db/f1db) (CC BY 4.0 — attribution
-required); [TracingInsights](https://github.com/TracingInsights) FastF1 exports (repositories declare MIT;
+required); [TracingInsights](https://github.com/TracingInsights) FastF1 exports (repositories declare MIT for 2022–2024 and Apache 2.0 for 2025–2026;
 the timing data is unofficial — non-commercial research use).
 
 F1, FORMULA ONE and related marks are trademarks of Formula One Licensing B.V. ApexLens is an independent

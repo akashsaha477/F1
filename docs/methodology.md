@@ -85,7 +85,37 @@ ApexLens conventions, not FIA classes. Team-mate corner deltas are only computed
 * **F — qualifying gap**: pre-event gap to pole (dry sessions), evaluated with MAE and per-event rank
   metrics.
 
-## 7. Explanations
+## 7. Race week planner (Model G)
+
+For a chosen race weekend, driver and (optionally) another team's car, the planner gives the weather
+assumption, the best dry tyre strategy with pit windows, expected lap times, the predicted finishing
+order and, for past races, what actually happened. Everything is estimated from data available before
+the race start (`src/apexlens/strategy/`):
+
+* **Strategy costs** — per lap, a compound pace offset (compared within driver-races at 8 laps of tyre
+  age; extrapolating to age 0 was unstable) plus degradation × tyre age (Model C slopes, recency-weighted
+  and shrunk to the circuit), plus the measured green-flag pit-stop loss per stop. Tyre life is capped at
+  the 90th percentile of race stint length for that compound. FIA rules for single events (e.g. tyre-life
+  caps in Qatar, two mandatory stops in Monaco 2025) are applied.
+* **Optimisation** — an exact dynamic programme over pit laps for every compound sequence with 1–3 stops
+  and at least two dry compounds. Pit windows are the laps at which a stop stays within a tolerance of
+  that plan's optimum. Orderings of the same tyres cost the same in this model; ties go to the compound
+  teams most often start this race on.
+* **Calibration** — two hidden costs that lap times cannot show (track position lost per stop; limited
+  new SOFT sets and graining per SOFT stint) are fitted on earlier races only, to agree with the plan most
+  often used by the top-10 finishers.
+* **Pace and finishing order** — the lap-pace model trained on earlier seasons gives each car's pace;
+  the finishing order blends grid position and predicted pace with a weight fitted on earlier races.
+* **Robustness** — parameters re-estimated on race-level bootstrap resamples; the share of resamples in
+  which each plan is best is reported.
+* **Weather** — user values, then the forecast (Open-Meteo, upcoming races), then the weekend's sessions,
+  then the circuit's history. Temperature is shown but does not change tyre wear: within-circuit
+  temperature adjustments made held-out degradation predictions worse.
+
+The backtest (`reports/race_strategy.md`) compares every plan with the race; copying the previous race
+at the same circuit is the main baseline.
+
+## 8. Explanations
 
 * Exact TreeSHAP for LightGBM and exact additive contributions for the linear models; grouped
   contributions per feature family.

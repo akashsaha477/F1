@@ -31,8 +31,9 @@ SOURCE_CATALOG: dict[str, dict] = {
     "tracinginsights": {
         "name": "TracingInsights FastF1 archive",
         "url": "https://github.com/TracingInsights",
-        "licence": "Repositories declare the MIT licence. Timing/telemetry originates from the Formula 1 live "
-                   "timing service via FastF1 and is unofficial; use for non-commercial research.",
+        "licence": "Season repositories declare MIT (2022-2024) or Apache 2.0 (2025-2026). Timing/telemetry "
+                   "originates from the Formula 1 live timing service via FastF1 and is unofficial; use for "
+                   "non-commercial research.",
         "coverage": "2018-present per-season repositories: per-session lap timing (all laps, sectors, tyres, "
                     "track status, joined weather), weather series, race-control messages, FastF1 corner markers, "
                     "per-lap car telemetry with position.",

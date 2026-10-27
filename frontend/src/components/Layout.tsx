@@ -2,6 +2,7 @@ import { NavLink, Outlet } from "react-router-dom";
 
 export const NAV = [
   { to: "/", label: "Overview" },
+  { to: "/race-week", label: "Race week planner" },
   { to: "/drivers", label: "Driver explorer" },
   { to: "/compare", label: "Driver comparison" },
   { to: "/tracks", label: "Track explorer" },

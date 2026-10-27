@@ -538,3 +538,107 @@ export interface ConditionDimension {
   tau: number;
   thresholds: Record<string, number>;
 }
+
+// ---- race week planner (/api/strategy) -------------------------------------------------------
+export interface RaceWeek {
+  event_id: string;
+  season: number;
+  round: number;
+  name: string;
+  circuit_id: string;
+  date: string;
+  status: "past" | "upcoming" | "no_timing_data";
+}
+
+export interface PitWindow { stop: number; best_lap: number; from_lap: number; to_lap: number }
+
+export interface StrategyPlan {
+  label: string;
+  sequence: string[];
+  stops: number;
+  stint_laps: number[];
+  pit_laps: number[];
+  pit_windows: PitWindow[];
+  delta_s: number;
+  strategy_cost_s: number;
+  calibration_cost_s: number | null;
+  equivalent_orders: string[];
+}
+
+export interface TraceLap { lap: number; compound: string; stint: number; tyre_age: number; lap_time_s: number; pit: "in" | "out" | null }
+
+export interface WeatherSummary { air_temp_c?: number; track_temp_c?: number; humidity_pct?: number; rain_share?: number; samples?: number }
+
+export interface WeekendSession extends WeatherSummary { session_id: string; session_code: string; start_utc: string | null }
+
+export interface MeanCI { estimate: number | null; lo: number | null; hi: number | null; n: number }
+
+export interface ActualStrategy {
+  sequence: string[]; label: string; stops: number; pit_laps: number[]; stint_laps: number[]; dry_only: boolean;
+  start_tyre_age: number | null;
+}
+
+export interface StrategyResponse {
+  event: { event_id: string; name: string; circuit_id: string; circuit_name: string; date: string; season: number; laps: number;
+    mode: "past" | "upcoming" };
+  driver: { driver_id: string; name: string; constructor_id: string; car_override: string | null };
+  weather: {
+    weekend_sessions: WeekendSession[];
+    circuit_history: { races: number; seasons?: number[]; air_temp_c?: number; track_temp_c?: number; track_temp_range_c?: number[];
+      humidity_pct?: number; rain_race_share?: number };
+    forecast: { source?: string; air_temp_c?: number; humidity_pct?: number; rain_probability_pct?: number; error?: string } | null;
+    race_actual: WeatherSummary | null;
+    assumed: { values: { track_temp_c?: number; air_temp_c?: number; humidity_pct?: number; rain_risk: number; wet_race_likely: boolean };
+      source: Record<string, string> };
+  };
+  parameters: {
+    laps: number; ref_lap_s: number; ref_source: string; pit_loss_s: number; start_age: number;
+    slope_s_per_lap: Record<string, number>; offset_s: Record<string, number>; max_stint: Record<string, number>;
+    sc_prob: number; vsc_prob: number; red_prob: number; fuel_pct_per_lap: number; rule_notes: string[];
+    evidence: { races_at_circuit: number; races_total: number; pit_stops_at_circuit: number;
+      degradation: Record<string, { stints_at_circuit: number; stints_total: number }> };
+  };
+  calibration: { stop_s: number; soft_stint_s: number; races: number; agreement: number | null } | null;
+  plans: StrategyPlan[];
+  best: StrategyPlan;
+  robustness: { n: number; best_share?: { label: string; share: number }[];
+    first_stop_lap?: { p10: number; median: number; p90: number } };
+  trace: { best: TraceLap[]; alternative: TraceLap[] | null; alternative_label: string | null };
+  expected_race_time_s: number;
+  prediction: {
+    pace_model: string; base_pct: number; grid: number; grid_source: string; predicted_position: number; blend_weight: number;
+    blend_weight_races: number;
+    field: { driver_id: string; name: string; constructor_id: string; grid: number; base_pct: number; pace_rank: number;
+      predicted_position: number; actual_position: number | null }[];
+  };
+  actual?: {
+    driver_strategy: ActualStrategy | null;
+    result: { position: number | null; position_text: string; grid: number | null; time_s: number | null; outcome: string;
+      reason_retired: string | null } | null;
+    race: { winner: (ActualStrategy & { driver_id: string; position: number }) | null; safety_car: boolean;
+      virtual_safety_car: boolean; red_flag: boolean; wet: boolean;
+      top: (ActualStrategy & { driver_id: string; position: number; constructor_id: string })[]; top_modal_plan: string | null };
+    laps: { lap: number; lap_time_s: number | null; compound: string; clean: boolean; reason: string | null }[];
+    replay_trace: TraceLap[] | null;
+    comparison: Record<string, boolean | number | null>;
+  };
+  backtest: {
+    races: number; strategy_races: number; plan_match: MeanCI; stops_match: MeanCI; start_match: MeanCI; window_hit: MeanCI;
+    previous_edition: Record<string, MeanCI>;
+    finishing_order: Record<string, Record<string, MeanCI>>;
+    lap_replay: { model_mae_s?: MeanCI; constant_pace_mae_s?: MeanCI };
+  } | null;
+  warnings: string[];
+  limitations: string[];
+}
+
+export interface StrategyRequest {
+  event_id: string;
+  driver_id: string;
+  constructor_override?: string | null;
+  grid_position?: number | null;
+  max_stops?: number;
+  window_s?: number;
+  track_temp_c?: number | null;
+  rain?: boolean | null;
+}

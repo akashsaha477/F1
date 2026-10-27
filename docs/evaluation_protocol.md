@@ -38,7 +38,10 @@ seasons with the most recent 15% of events held out for calibration.
 * Qualifying (Model F): MAE of the gap to pole, mean per-event Spearman, pole hit rate, top-3 overlap.
 * Tyre degradation (Model C): MAE of lap-time predictions inside held-out stints.
 * Clusters (Model E): silhouette and bootstrap adjusted Rand index (stability).
-* Explanations: see `docs/methodology.md` §7.
+* Race strategy (Model G): agreement with the top-10 finishers' most common stop count, compound set and
+  starting compound; first-stop error in laps; share of first stops inside the planned window; lap-time
+  error when replaying actual strategies; finishing-order rank correlation, winner and podium hits.
+* Explanations: see `docs/methodology.md` §8.
 
 ## Experiments
 
@@ -52,6 +55,7 @@ seasons with the most recent 15% of events held out for calibration.
 | Qualifying gap (F) | `modeling/quali_model.py` | `evaluation_runs/quali_model.json` |
 | Explanation validation | `explainability/validation.py` | `models/<version>/explanation_validation.json` |
 | Error analysis | `evaluation/error_analysis.py` | `evaluation_runs/error_analysis_<horizon>.json` |
+| Race strategy backtest (G): strategy, pit windows, lap replay, finishing order vs reality | `strategy/backtest.py` | `evaluation_runs/strategy_backtest.json` |
 
 ## Reproducing
 

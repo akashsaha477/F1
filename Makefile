@@ -1,5 +1,5 @@
 PY ?= .venv/bin/python
-SEASONS ?= 2022-2025
+SEASONS ?= 2022-2026
 
 .PHONY: help install ingest-small ingest coverage features train evaluate reports pipeline api frontend \
         frontend-build test test-fast lint check docker-up docker-pipeline

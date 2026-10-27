@@ -53,6 +53,10 @@ METHODOLOGY = {
         "D_driver_comparison": "difference of two Model A predictions under one scenario; bootstrap interval of the difference",
         "E_profile_clustering": "PCA + k-means on fingerprints with bootstrap stability (exploratory)",
         "F_qualifying": "pre-event qualifying gap to pole; rank metrics per event",
+        "G_race_strategy": "race week planner: exact pit-lap optimisation of 1-3 stop dry strategies from degradation, "
+                           "compound pace and pit loss measured before the race, calibrated hidden costs per stop and "
+                           "SOFT stint, grid + pace finishing order; backtested against every race since the second "
+                           "season",
         "driver_fingerprint": "two-stage: per-session condition adjustment (OLS), then crossed random effects "
                               "(driver, driver-season, team-season) fitted by REML",
         "conditions": "per-driver deviations from the dry, car-adjusted expectation with empirical-Bayes shrinkage",
@@ -78,11 +82,14 @@ METHODOLOGY = {
         "Wet-weather evidence is sparse; condition-specific estimates are shrunk and often reported as insufficient.",
         "The 2026 season uses new regulations; the models are trained on 2022-2025 and are not valid for 2026 cars.",
         "All explanations describe associations learned by models, never causal effects.",
+        "Race week plans are for dry races without safety cars; in the backtest they match the top-10's choices about "
+        "as often as copying the previous race at the same circuit.",
     ],
     "licences": {
         "code": "MIT",
         "f1db": "CC BY 4.0 — attribution: F1DB (https://github.com/f1db/f1db)",
-        "tracinginsights": "Repositories declare MIT; the underlying timing data is unofficial and belongs to its owners",
+        "tracinginsights": "Season repositories declare MIT (2022-2024) or Apache 2.0 (2025-2026); the underlying "
+                           "timing data is unofficial and belongs to its owners",
         "trademarks": "F1, FORMULA ONE and related marks are trademarks of Formula One Licensing B.V.; ApexLens is not "
                       "associated with Formula 1, the FIA or any team.",
     },

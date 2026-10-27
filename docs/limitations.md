@@ -39,6 +39,16 @@ What ApexLens cannot tell you, and why. The dashboard's *Data & methodology* pag
   over Ridge and the spline GAM on the holdout season is within sampling uncertainty (it is significant
   only once the weekend's qualifying is known). See `reports/model_comparison.md`.
 
+## Race week planner
+
+* Plans are for dry races; intermediate/wet strategies are not optimised, and the rain risk is shown instead.
+* Safety cars and VSCs are not simulated; the historical frequency is shown. Real strategies react to them.
+* Every stint after the start is assumed to be on new tyres; real tyre allocations and used sets differ.
+* The backtest shows the planner's stop count and tyre choice agree with the top-10 about as often as
+  simply copying the previous race at the same circuit, and less often for the starting compound.
+* The finishing order does not predict retirements, penalties or first-lap incidents.
+* For upcoming races the line-up and form are those after the last ingested race.
+
 ## Interpretation
 
 * **Associations, not causes.** Feature contributions, ALE curves and counterfactuals describe the
@@ -51,7 +61,7 @@ What ApexLens cannot tell you, and why. The dashboard's *Data & methodology* pag
 ## Licensing and use
 
 * F1DB data is CC BY 4.0 and requires attribution.
-* The TracingInsights repositories declare MIT; the underlying timing data originates from the F1
+* The TracingInsights repositories declare MIT (2022–2024) or Apache 2.0 (2025–2026); the underlying timing data originates from the F1
   live-timing service and is unofficial. Use for non-commercial research.
 * F1, FORMULA ONE and related marks are trademarks of Formula One Licensing B.V. ApexLens is not
   associated with Formula 1, the FIA or any team, and is not intended for betting.

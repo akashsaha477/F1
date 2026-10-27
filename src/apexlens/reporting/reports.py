@@ -521,6 +521,92 @@ def _worked_example(ctx: Ctx) -> str | None:
 
 
 # --------------------------------------------------------------------------------------------------
+# Race strategy planner (Model G)
+# --------------------------------------------------------------------------------------------------
+def race_strategy(ctx: Ctx) -> str:
+    b = ctx.optional("strategy_backtest.json")
+    out = [header("Race strategy planner — backtest", ctx, ["evaluation_runs/strategy_backtest.json"])]
+    if not b:
+        return "\n".join(out + ["_Not run yet: `python scripts/evaluate_models.py --only strategy`._\n"])
+    out += ["Every race from the second ingested season on is planned with data available before its start "
+            "(strategy parameters from earlier races, a lap-pace model trained on earlier seasons, weather from the "
+            "weekend's sessions) and compared with what happened. Method: `docs/methodology.md` §7, code: "
+            "`src/apexlens/strategy/`.\n",
+            f"{b['races_total']} races; {b['races_strategy_evaluated']} dry races without a red flag are used for "
+            f"the strategy comparison (excluded: wet {', '.join(b['excluded_from_strategy']['wet']) or '–'}; "
+            f"red flag {', '.join(b['excluded_from_strategy']['red_flag']) or '–'}).\n"]
+    names = {"stops_match": "Stop count = top-10's most common", "plan_match": "Stops + set of compounds = top-10's most common",
+             "start_match": "Starting compound = top-10's most common", "stops_match_winner": "Stop count = winner's",
+             "first_stop_error": "First stop vs top-10 with that stop count (laps)",
+             "window_hit": "Top-10 first stops inside the planned window"}
+    for part, label_ in (("all", "All evaluated races"), ("green", "Races without safety car or VSC"),
+                         ("safety_car_or_vsc", "Races with a safety car or VSC")):
+        blk = b["strategy"][part]
+        rows = []
+        for k, name in names.items():
+            rows.append({"metric": name, "physical": _ci_str(blk["physical"].get(k), k),
+                         "calibrated": _ci_str(blk["calibrated"].get(k), k),
+                         "previous": _ci_str(blk["previous_edition"].get(k), k) if k in blk["previous_edition"] else "–",
+                         "common": _ci_str(blk["most_common_stops"].get(k), k) if k in blk["most_common_stops"] else "–"})
+        out += [f"## {label_} ({blk['races']} races)\n",
+                table(rows, [("metric", "Measure"), ("physical", "Planner (lap-time costs only)"),
+                             ("calibrated", "Planner (calibrated)"), ("previous", "Copy previous race here"),
+                             ("common", "Most common stop count so far")],
+                      formats={k: str for k in ("physical", "calibrated", "previous", "common")}), ""]
+        diffs = [{"c": f"calibrated − previous race: {k.replace('_', ' ')}", "v": ci(v)}
+                 for k, v in blk["calibrated_minus_previous_edition"].items()]
+        diffs += [{"c": f"calibrated − physical: {k.replace('_', ' ')}", "v": ci(v)}
+                  for k, v in blk["calibrated_minus_physical"].items()]
+        out += [table(diffs, [("c", "Paired difference (same races)"), ("v", "Estimate [95% CI]")], formats={"v": str}), ""]
+    cal = b.get("latest_calibration") or {}
+    out += ["## Calibration\n",
+            f"Hidden costs fitted on earlier races (latest fit, {cal.get('races', 0)} races): "
+            f"{fmt(cal.get('stop_s'), 1)} s per pit stop (track position, traffic) and {fmt(cal.get('soft_stint_s'), 1)} s per "
+            "SOFT stint (set availability after qualifying, graining). Agreement with the top-10's most common plan on "
+            f"those races: {fmt(cal.get('agreement'), pct=True, nd=3)}.\n"]
+    fo = b["finishing_order"]
+    rows = [{"model": {"blend": "Planner (grid + pace blend)", "grid_order": "Grid order", "pace_order": "Pace order"}[k],
+             **{m: _ci_str(v.get(m), m) for m in ("spearman", "winner_correct", "podium_overlap", "position_mae")}}
+            for k, v in fo.items()]
+    out += ["## Finishing order\n",
+            table(rows, [("model", "Prediction"), ("spearman", "Rank correlation"), ("winner_correct", "Winner correct"),
+                         ("podium_overlap", "Podium overlap"), ("position_mae", "Position error")],
+                  formats={m: str for m in ("spearman", "winner_correct", "podium_overlap", "position_mae")}),
+            f"\nBlend − grid order, rank correlation: {ci(b['blend_minus_grid_spearman'])}. Classified finishers only.\n"]
+    lr = b.get("lap_replay") or {}
+    if lr:
+        out += ["## Lap times\n",
+                f"The top-10's actual tyre sequences replayed through the model ({lr['drivers']} driver-races, "
+                f"{lr['laps']:,} representative laps): mean absolute error {_ci_str(lr['model_mae_s'], 's')} s per lap vs "
+                f"{_ci_str(lr['constant_pace_mae_s'], 's')} s for a constant lap time at the predicted pace "
+                f"(difference {ci(lr['model_minus_constant'])}). Most of the remaining error is the level of the race's "
+                "lap times (estimated from qualifying), not the shape over the race.\n"]
+    td = ctx.optional("tyre_degradation.json")
+    if td and "temp_vs_circuit" in td.get("comparisons", {}):
+        out += ["## Temperature\n",
+                "Adding a within-circuit track-temperature adjustment to the degradation slopes changed held-out stint "
+                f"predictions by {ci(td['comparisons']['temp_vs_circuit'], 4)} % points (positive = worse), so the planner "
+                "does not adjust tyre wear for temperature.\n"]
+    races = [{"event": r["event_id"], "circuit": r["circuit_id"], "plan": r["calibrated"]["plan"],
+              "actual": (r.get("actual_modal_plan") or "–").replace("|", " stop(s): "), "winner": r.get("winner_strategy") or "–",
+              "ok": "yes" if (r["calibrated"].get("plan_match")) else ("no" if r.get("strategy_evaluated") else "not evaluated"),
+              "sc": "SC/VSC" if not r["green"] else ""} for r in b["races"]]
+    out += ["## Race by race\n",
+            table(races, [("event", "Race"), ("circuit", "Circuit"), ("plan", "Planned (calibrated)"),
+                          ("actual", "Top-10 most common"), ("winner", "Winner"), ("ok", "Match"), ("sc", "Neutralised")],
+                  formats={k: str for k in ("plan", "actual", "winner", "ok", "sc")})]
+    return "\n".join(out) + "\n"
+
+
+def _ci_str(c: dict | None, kind: str) -> str:
+    if not c or c.get("estimate") is None:
+        return "–"
+    if kind in ("first_stop_error", "position_mae", "spearman", "s"):
+        return f"{c['estimate']:.2f} [{c['lo']:.2f}, {c['hi']:.2f}]"
+    return f"{100 * c['estimate']:.0f}% [{100 * c['lo']:.0f}, {100 * c['hi']:.0f}]"
+
+
+# --------------------------------------------------------------------------------------------------
 # Generated docs
 # --------------------------------------------------------------------------------------------------
 DICT_TABLES = {
@@ -652,6 +738,7 @@ def index(ctx: Ctx, written: list[str]) -> str:
         "model_comparison.md": "Models A–F, walk-forward metrics, paired comparisons, ablations",
         "error_analysis.md": "Where the models fail: conditions, tyre age, experience, events, teams",
         "explainability.md": "Global and local explanations and their validation",
+        "race_strategy.md": "Race week planner: strategy, pit windows and finishing order vs what happened",
     }
     for w in written:
         if w in desc:

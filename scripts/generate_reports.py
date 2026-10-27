@@ -19,7 +19,7 @@ from apexlens.storage.paths import DataPaths
 REPORTS = {
     "coverage_report": R.coverage, "eda": R.eda, "feature_engineering": R.feature_engineering,
     "driver_profiles": R.driver_profiles, "model_comparison": R.model_comparison, "error_analysis": R.error_analysis,
-    "explainability": R.explainability,
+    "explainability": R.explainability, "race_strategy": R.race_strategy,
 }
 DOCS = {"data_dictionary": R.data_dictionary, "feature_definitions": R.feature_definitions, "model_card": R.model_card}
 

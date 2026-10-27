@@ -19,6 +19,9 @@ import type {
   Season,
   SessionItem,
   SessionLaps,
+  RaceWeek,
+  StrategyRequest,
+  StrategyResponse,
 } from "../types/api";
 
 const STALE = 5 * 60 * 1000;
@@ -113,3 +116,8 @@ export function useConstructorName() {
   const map = new Map((q.data ?? []).map((c) => [c.constructor_id, c.name]));
   return (id?: string | null) => (id ? map.get(id) ?? id.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ") : "—");
 }
+
+export const useRaceWeeks = () =>
+  useQuery({ queryKey: ["race-weeks"], queryFn: () => getJson<{ race_weeks: RaceWeek[] }>("/strategy/race-weeks"), staleTime: STALE });
+export const useStrategyPlan = () =>
+  useMutation({ mutationFn: (r: StrategyRequest) => postJson<StrategyResponse>("/strategy/plan", r) });
