@@ -1,5 +1,5 @@
 """Secondary evaluations after training: explanation validation, ablations, corner experiments
-(Model B), qualifying model (Model F) and error analysis. Results go to data/models/evaluation_runs/ and the model folders.
+(Model B), qualifying model (Model F), error analysis and the race strategy backtest (Model G). Results go to data/models/evaluation_runs/ and the model folders.
 
     python scripts/evaluate_models.py                # everything
     python scripts/evaluate_models.py --only ablations
@@ -17,8 +17,9 @@ from apexlens.modeling.ablation import run_ablations
 from apexlens.modeling.quali_model import run_quali_model
 from apexlens.modeling.train_pipeline import run_corner_experiments
 from apexlens.storage.paths import DataPaths
+from apexlens.strategy.backtest import run_backtest
 
-STEPS = ("explanations", "ablations", "corners", "quali", "errors")
+STEPS = ("explanations", "ablations", "corners", "quali", "errors", "strategy")
 
 if __name__ == "__main__":
     warnings.filterwarnings("ignore", category=FutureWarning)
@@ -46,4 +47,11 @@ if __name__ == "__main__":
         for h in ("pre_event", "pre_race"):
             r = run_error_analysis(paths, horizon=h)
             summary[f"errors_{h}"] = {c["by"]: round(c["estimate"], 3) for c in r["contrasts"]}
+    if "strategy" in steps:
+        r = run_backtest(paths)
+        s = r["strategy"]["all"]
+        summary["strategy"] = {"races": r["races_strategy_evaluated"],
+                               "plan_match_calibrated": s["calibrated"]["plan_match"]["estimate"],
+                               "plan_match_previous_edition": s["previous_edition"]["plan_match"]["estimate"],
+                               "order_spearman_blend": r["finishing_order"]["blend"]["spearman"]["estimate"]}
     print(json.dumps(summary, indent=2, default=str))

@@ -154,6 +154,28 @@ def driver_deg_effects(st: pd.DataFrame) -> pd.DataFrame:
     return res
 
 
+def temperature_betas(st: pd.DataFrame, min_stints: int = 30) -> dict[str, float]:
+    """Within-circuit association of stint degradation with track temperature, per dry compound.
+
+    Slopes and temperatures are centred on their circuit-compound means, so the coefficient answers "is
+    degradation higher than usual *at this circuit* when it is hotter than usual there", which is not
+    confounded with the circuit itself. Precision-weighted least squares.
+    """
+    out = {}
+    d = st[st["compound"].isin(DRY)].dropna(subset=["track_temp_c", "slope_pct"]).copy()
+    if d.empty:
+        return out
+    g = d.groupby(["circuit_id", "compound"])
+    d["ds"] = d["slope_pct"] - g["slope_pct"].transform("mean")
+    d["dt"] = d["track_temp_c"] - g["track_temp_c"].transform("mean")
+    for comp, x in d.groupby("compound"):
+        w = 1.0 / np.maximum(x["slope_se"].to_numpy(), 0.01) ** 2
+        sxx = float(np.sum(w * x["dt"] ** 2))
+        if len(x) >= min_stints and sxx > 0:
+            out[comp] = float(np.sum(w * x["dt"] * x["ds"]) / sxx)
+    return out
+
+
 def evaluate_degradation_models(st: pd.DataFrame, laps: pd.DataFrame, n_boot: int = 300) -> dict:
     seasons = sorted(st["season"].unique())
     groups = laps.groupby(["session_id", "driver_id", "stint"]).indices
@@ -164,7 +186,10 @@ def evaluate_degradation_models(st: pd.DataFrame, laps: pd.DataFrame, n_boot: in
         comp_slope = train.groupby("compound").apply(
             lambda g: np.sum(g["slope_pct"] / np.maximum(g["slope_se"], 0.01) ** 2) / np.sum(1 / np.maximum(g["slope_se"], 0.01) ** 2),
             include_groups=False)
-        circ = train.groupby(["circuit_id", "compound"]).agg(m=("slope_pct", "mean"), n=("slope_pct", "size"))
+        circ = train.groupby(["circuit_id", "compound"]).agg(m=("slope_pct", "mean"), n=("slope_pct", "size"),
+                                                            t=("track_temp_c", "mean"))
+        temp_beta = temperature_betas(train)
+        pooled_temp = train.groupby("compound")["track_temp_c"].mean()
         drv = driver_deg_effects(train).set_index(["driver_id", "compound"]) if len(train) else pd.DataFrame()
         if len(drv):
             drv = drv.groupby(level=[0, 1])["posterior_mean"].last()
@@ -185,16 +210,18 @@ def evaluate_degradation_models(st: pd.DataFrame, laps: pd.DataFrame, n_boot: in
             else:
                 c_slope = base_slope
             d_dev = float(drv.get((r.driver_id, r.compound), 0.0)) if len(drv) else 0.0
+            t_ref = circ.loc[key, "t"] if key in circ.index else pooled_temp.get(r.compound, np.nan)
+            t_adj = temp_beta.get(r.compound, 0.0) * (r.track_temp_c - t_ref) if np.isfinite(r.track_temp_c - t_ref) else 0.0
             out = {}
             for name, slope in (("flat", 0.0), ("compound", base_slope), ("compound_circuit", c_slope),
-                                ("compound_circuit_driver", c_slope + d_dev)):
+                                ("compound_circuit_driver", c_slope + d_dev), ("compound_circuit_temp", c_slope + t_adj)):
                 level = np.mean(y[anchor] - slope * age[anchor])
                 out[name] = level + slope * age[rest]
             for i, yy in enumerate(y[rest]):
                 preds.append({"season": test, "event_id": r.event_id, "y": yy, **{k: v[i] for k, v in out.items()},
                               "ref_s": r.session_ref_s})
     p = pd.DataFrame(preds)
-    models = ["flat", "compound", "compound_circuit", "compound_circuit_driver"]
+    models = ["flat", "compound", "compound_circuit", "compound_circuit_driver", "compound_circuit_temp"]
     res = {"n_predicted_laps": int(len(p)), "n_events": int(p["event_id"].nunique()),
            "mae_pct": {m: M.mae(p["y"], p[m]) for m in models},
            "mae_s": {m: float(np.mean(np.abs(p["y"] - p[m]) * p["ref_s"] / 100)) for m in models},
@@ -203,6 +230,7 @@ def evaluate_degradation_models(st: pd.DataFrame, laps: pd.DataFrame, n_boot: in
                "compound_vs_flat": M.paired_mae_difference(p, "compound", "flat", n_boot=n_boot),
                "circuit_vs_compound": M.paired_mae_difference(p, "compound_circuit", "compound", n_boot=n_boot),
                "driver_vs_circuit": M.paired_mae_difference(p, "compound_circuit_driver", "compound_circuit", n_boot=n_boot),
+               "temp_vs_circuit": M.paired_mae_difference(p, "compound_circuit_temp", "compound_circuit", n_boot=n_boot),
            },
            "protocol": f"walk-forward by season; first {ANCHOR_LAPS} laps of each stint (>= {MIN_EVAL_LAPS} laps) anchor the level"}
     return res

@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     tracinginsights_git_base: str = "https://github.com/TracingInsights"
     jolpica_base: str = "https://api.jolpi.ca/ergast/f1"
     openf1_base: str = "https://api.openf1.org/v1"
+    # race-week weather forecast for upcoming races (Open-Meteo, no key; CC BY 4.0). Disable offline.
+    weather_forecast_enabled: bool = True
+    weather_forecast_base: str = "https://api.open-meteo.com/v1/forecast"
 
     api_cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 

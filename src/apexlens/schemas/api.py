@@ -60,3 +60,18 @@ class ExplainRequest(BaseModel):
     task: Literal["lap_time", "driver_comparison"] = "lap_time"
     lap: LapTimeRequest | None = None
     comparison: ComparisonRequest | None = None
+
+
+class StrategyRequest(BaseModel):
+    """Race-week strategy plan for one driver (and optionally another team's car)."""
+
+    event_id: str = Field(..., max_length=16, description="Race week, e.g. 2024-12 or an upcoming 2026 race")
+    driver_id: str = Field(..., max_length=64)
+    constructor_override: str | None = Field(None, max_length=64, description="Put the driver in this team's car")
+    grid_position: int | None = Field(None, ge=1, le=26, description="Starting position (defaults to the actual or predicted grid)")
+    max_stops: int = Field(3, ge=1, le=3)
+    window_s: float = Field(2.0, ge=0.5, le=15, description="Pit window: stops within this many seconds of the best plan")
+    track_temp_c: float | None = Field(None, ge=-10, le=75)
+    air_temp_c: float | None = Field(None, ge=-15, le=55)
+    humidity_pct: float | None = Field(None, ge=0, le=100)
+    rain: bool | None = Field(None, description="Force a wet (true) or dry (false) weather assumption")
