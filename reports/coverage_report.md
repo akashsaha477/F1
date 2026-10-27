@@ -1,13 +1,13 @@
 # Data coverage report
 
-Generated: 2026-10-27T07:49:02+00:00 (by `apexlens coverage`)
+Generated: 2026-10-27T08:09:50+00:00 (by `apexlens coverage`)
 
 ## Sources
 
 | Source | Seasons | Licence / status |
 |---|---|---|
 | f1db | [1950, 2026] | CC BY 4.0 (attribution required) |
-| tracinginsights | [2022, 2023, 2024, 2025, 2026] | Repositories declare the MIT licence. Timing/telemetry originates from the Formula 1 live timing service via FastF1 and is unofficial; use for non-commercial research. |
+| tracinginsights | [2022, 2023, 2024, 2025, 2026] | Season repositories declare MIT (2022-2024) or Apache 2.0 (2025-2026). Timing/telemetry originates from the Formula 1 live timing service via FastF1 and is unofficial; use for non-commercial research. |
 | fastf1 | [] | adapter implemented; host unreachable from build environment |
 | jolpica | [] | adapter implemented; host unreachable from build environment |
 | openf1 | [] | adapter implemented; host unreachable from build environment |

@@ -1,6 +1,6 @@
 # Driver performance profiles
 
-_Generated 2026-10-26 18:57 UTC by `scripts/generate_reports.py` from `gold/driver_profiles`, `gold/driver_condition_effects`, `gold/driver_clusters`. Do not edit by hand; re-run the script._
+_Generated 2026-10-27 08:09 UTC by `scripts/generate_reports.py` from `gold/driver_profiles`, `gold/driver_condition_effects`, `gold/driver_clusters`. Do not edit by hand; re-run the script._
 
 ## Method
 
@@ -13,31 +13,31 @@ Stage 1 removes, per session, the effects of compound, compound-specific tyre ag
 
 | Component | Race pace | share | Qualifying gap | share |
 |---|---|---|---|---|
-| driver | 0.104 | 24.6% | 0.212 | 31.3% |
-| driver-season | 0.005 | 1.1% | 0.003 | 0.5% |
-| team-season | 0.205 | 48.3% | 0.123 | 18.3% |
-| residual | 0.110 | 25.9% | 0.337 | 49.9% |
+| driver | 0.077 | 10.8% | 0.126 | 13.9% |
+| driver-season | 0.003 | 0.5% | 0.003 | 0.3% |
+| team-season | 0.501 | 70.1% | 0.454 | 50.0% |
+| residual | 0.133 | 18.6% | 0.326 | 35.9% |
 
-Race model: 1,989 driver-sessions; qualifying model: 1,624 driver-sessions. Team-mate differences are directly identified. The split of a team-season's mean pace into car and driver components relies on drivers who changed teams and on the estimated variance components; cross-team driver comparisons are therefore less certain than the intervals of a single effect suggest.
+Race model: 2,471 driver-sessions; qualifying model: 1,996 driver-sessions. Team-mate differences are directly identified. The split of a team-season's mean pace into car and driver components relies on drivers who changed teams and on the estimated variance components; cross-team driver comparisons are therefore less certain than the intervals of a single effect suggest.
 
-## Team-adjusted race pace, 2025
+## Team-adjusted race pace, 2026
 
 ![Team-adjusted race pace with intervals](figures/profiles_race_pace.png)
 
-19 of 20 adjacent pairs in this ordering have overlapping intervals; the ordering is not a ranking with that precision. Drivers with few races are wide by construction.
+21 of 22 adjacent pairs in this ordering have overlapping intervals; the ordering is not a ranking with that precision. Drivers with few races are wide by construction.
 
 | Driver | Team | Dry races + sprints | Adj. pace % | lo | hi | Gap to team-mate % | Quali gap to team-mate % |
 |---|---|---|---|---|---|---|---|
-| max-verstappen | red-bull | 26 | -0.961 | -1.171 | -0.751 | -1.113 | -1.011 |
-| charles-leclerc | ferrari | 26 | -0.433 | -0.643 | -0.224 | -0.226 | -0.218 |
-| lando-norris | mclaren | 26 | -0.354 | -0.597 | -0.112 | 0.010 | -0.035 |
-| oscar-piastri | mclaren | 24 | -0.250 | -0.502 | 0.002 | -0.010 | 0.035 |
-| george-russell | mercedes | 27 | -0.237 | -0.474 | -0.000 | -0.321 | -0.368 |
-| carlos-sainz-jr | williams | 25 | -0.170 | -0.375 | 0.034 | 0.071 | -0.097 |
-| lewis-hamilton | ferrari | 27 | -0.158 | -0.373 | 0.058 | 0.226 | 0.218 |
-| fernando-alonso | aston-martin | 25 | -0.145 | -0.366 | 0.076 | -0.188 | -0.529 |
-| pierre-gasly | alpine | 25 | -0.125 | -0.314 | 0.063 | -0.235 | -0.513 |
-| jack-doohan | alpine | 5 | -0.047 | -0.333 | 0.238 | 0.403 | 0.632 |
+| max-verstappen | red-bull | 21 | -0.824 | -1.010 | -0.638 | -0.672 | -0.166 |
+| lando-norris | mclaren | 22 | -0.371 | -0.605 | -0.137 | -0.197 | -0.095 |
+| charles-leclerc | ferrari | 22 | -0.282 | -0.477 | -0.087 | -0.095 | -0.005 |
+| sergio-perez | cadillac | 22 | -0.270 | -0.472 | -0.069 | -0.442 | -0.129 |
+| kimi-antonelli | mercedes | 23 | -0.194 | -0.436 | 0.049 | -0.201 | -0.247 |
+| pierre-gasly | alpine | 22 | -0.147 | -0.323 | 0.030 | -0.318 | -0.575 |
+| oscar-piastri | mclaren | 21 | -0.127 | -0.371 | 0.116 | 0.197 | 0.095 |
+| lewis-hamilton | ferrari | 22 | -0.123 | -0.325 | 0.079 | 0.095 | 0.005 |
+| fernando-alonso | aston-martin | 23 | -0.123 | -0.335 | 0.089 | -0.176 | -0.758 |
+| carlos-sainz-jr | williams | 23 | -0.119 | -0.309 | 0.071 | -0.124 | -0.329 |
 
 _First ten rows of the ordering; the full table is served by `/api/driver-effects`._
 
@@ -47,11 +47,11 @@ Deviation of a driver from their own dry, car-adjusted expectation, shrunk towar
 
 | dimension | drivers | tau | insufficient_evidence | not_distinguishable_from_zero |
 |---|---|---|---|---|
-| high_speed_circuit | 31 | 0.000 | 1 | 30 |
-| slow_corner_circuit | 31 | 0.000 | 1 | 30 |
-| street_circuit | 31 | 0.000 | 1 | 30 |
+| high_speed_circuit | 32 | 0.000 | 1 | 31 |
+| slow_corner_circuit | 32 | 0.043 | 1 | 31 |
+| street_circuit | 32 | 0.081 | 1 | 31 |
 | wet_qualifying | 30 | 0.000 | 4 | 26 |
-| wet_race | 31 | 0.143 | 6 | 25 |
+| wet_race | 32 | 0.142 | 7 | 25 |
 
 
 ## Corner-type specialisation
@@ -60,22 +60,22 @@ Is a driver's corner delta to their team-mate a repeatable trait? Each driver-se
 
 | Measure | Driver-seasons | Split-half r | Spearman–Brown | Permutation p |
 |---|---|---|---|---|
-| overall corner delta to team-mate | 64 | 0.236 | 0.381 | 0.069 |
-| slow-minus-fast corner specialisation | 64 | -0.058 | -0.124 | 0.635 |
+| overall corner delta to team-mate | 85 | 0.227 | 0.370 | 0.031 |
+| slow-minus-fast corner specialisation | 85 | -0.011 | -0.022 | 0.923 |
 
 ## Clusters (exploratory)
 
 | k | Silhouette | Bootstrap ARI |
 |---|---|---|
-| 2 | 0.186 | 0.818 |
-| 3 | 0.174 | 0.581 |
-| 4 | 0.140 | 0.466 |
-| 5 | 0.136 | 0.503 |
-| 6 | 0.121 | 0.380 |
+| 2 | 0.177 | 0.808 |
+| 3 | 0.172 | 0.551 |
+| 4 | 0.126 | 0.477 |
+| 5 | 0.139 | 0.415 |
+| 6 | 0.142 | 0.435 |
 
-Chosen k = 2 on 81 driver-seasons with ≥ 10 dry races. Exploratory only. Clusters are stable under resampling. The two groups mainly separate overall pace relative to team-mates (|r| = 0.76 with a combined pace score), i.e. one performance axis rather than distinct driving styles; solutions with three or more groups are unstable.
+Chosen k = 2 on 103 driver-seasons with ≥ 10 dry races. Exploratory only. Clusters are stable under resampling. The two groups mainly separate overall pace relative to team-mates (|r| = 0.75 with a combined pace score), i.e. one performance axis rather than distinct driving styles; solutions with three or more groups are unstable.
 
 | cluster | size | description |
 |---|---|---|
-| 0 | 46 | lower qualifying gap to team-mate (-0.6 SD); lower team-adjusted qualifying (negative = faster) (-0.6 SD); lower race gap to team-mate (-0.5 SD) |
-| 1 | 35 | higher qualifying gap to team-mate (+0.8 SD); higher team-adjusted qualifying (negative = faster) (+0.8 SD); higher race gap to team-mate (+0.7 SD) |
+| 0 | 49 | lower race gap to team-mate (-0.8 SD); lower qualifying gap to team-mate (-0.8 SD); lower team-adjusted qualifying (negative = faster) (-0.6 SD) |
+| 1 | 54 | higher race gap to team-mate (+0.7 SD); higher qualifying gap to team-mate (+0.7 SD); higher team-adjusted qualifying (negative = faster) (+0.6 SD) |

@@ -127,3 +127,28 @@ directory. The backend image was built and run here (pip install, API serving re
 layer was replaced by a mounted `libgomp` for the test (it is required: LightGBM fails to import without it).
 The frontend image could not be built here (Docker Hub rate limit); its steps (`npm ci`, `npm run build`) pass
 locally.
+
+## Race week planner (Model G)
+- [x] Strategy parameters estimated only from data before the race (`strategy/params.py`): recency-weighted, circuit-shrunk degradation (Model C); compound pace offsets compared within driver-races at 8 laps of tyre age (extrapolating to age 0 was unstable across seasons); measured green-flag pit loss; tyre-life caps; fuel trend; lap-1 loss; safety-car / VSC / red-flag frequencies; FIA single-event rules (Qatar 2023/2025 tyre-life caps, Monaco 2025 two stops)
+- [x] Exact optimiser (`strategy/optimizer.py`): min-plus dynamic programme over pit laps for all 1–3 stop sequences with two dry compounds, checked against brute force; pit windows from a forward/backward pass; order ties broken by historical start compound
+- [x] Calibration of hidden costs (per stop, per SOFT stint) to teams' revealed choices on earlier races only (`strategy/calibration.py`)
+- [x] Pace from the lap-pace model trained on earlier seasons only; finishing order as a grid/pace blend with the weight fitted on earlier races; bootstrap robustness of the call
+- [x] Weather: user input → Open-Meteo forecast (upcoming races; adapter mock-tested, blocked in the build sandbox) → weekend sessions → circuit history. Temperature-adjusted degradation was tested in Model C and made held-out predictions worse (+0.105 pp), so it is not used
+- [x] What actually happened (`strategy/actual.py`) and a backtest of every race since 2023 (`strategy/backtest.py`, `reports/race_strategy.md`)
+- [x] API `/api/strategy/race-weeks|plan|backtest`; dashboard page *Race week planner*; tests incl. a leakage test that corrupts all data after a race and checks its parameters are unchanged
+
+Backtest (71 dry races 2023–2026): agreement with the top-10's most common plan — stop count 62% (planner)
+vs 58% (copy last year's race), stops + compounds 44% vs 42%, starting compound 82% vs 90%; in 2026 (new
+regulations, 14 races) stops + compounds 57% vs 31%. Finishing order rank correlation 0.79 vs 0.75 for the
+grid (+0.033, CI +0.016…+0.051). Replaying actual strategies improves lap-time error by 0.14 s/lap over a
+constant pace, but most remaining error is the race's lap-time level.
+
+## 2026 season
+- [x] Ingested 2026 rounds 1–18 (90 sessions, qualifying telemetry for all 24 qualifying/sprint-qualifying sessions); new teams (Cadillac, Audi) map cleanly
+- [x] Corrected the TracingInsights licence notes: 2022–2024 repositories are MIT, 2025–2026 Apache 2.0
+- [x] Full rebuild, retraining and re-evaluation with 2026 as the holdout season; fixed session start-time parsing (mixed date / ISO timestamps) found while planning the 2026 Mexico City GP
+
+Findings: on 2026 the lap-pace LightGBM (0.894%) is no longer better than the team-form baseline (0.898%) or
+Ridge (0.877%); pre-race qualifying information still helps (−0.033 pp). Car differences dominate driver
+differences even more (team-season 0.50 vs driver 0.08 %²). Form features lag the 2026 order (Aston Martin
+1.8% slower, Mercedes 0.7% faster than predicted in the first half).

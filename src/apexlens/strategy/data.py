@@ -30,7 +30,7 @@ class StrategyData:
     @cached_property
     def sessions(self) -> pd.DataFrame:
         s = read_table(self.paths.silver("sessions"))
-        s["start"] = pd.to_datetime(s["start_utc"], utc=True, errors="coerce")
+        s["start"] = pd.to_datetime(s["start_utc"], utc=True, errors="coerce", format="ISO8601")
         return s
 
     @cached_property

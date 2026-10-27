@@ -1,31 +1,31 @@
 # Race strategy planner — backtest
 
-_Generated 2026-10-27 07:52 UTC by `scripts/generate_reports.py` from `evaluation_runs/strategy_backtest.json`. Do not edit by hand; re-run the script._
+_Generated 2026-10-27 08:09 UTC by `scripts/generate_reports.py` from `evaluation_runs/strategy_backtest.json`. Do not edit by hand; re-run the script._
 
-Every race from the second ingested season on is planned with data available before its start (strategy parameters from earlier races, a lap-pace model trained on earlier seasons, weather from the weekend's sessions) and compared with what happened. Method: `docs/methodology.md` §6, code: `src/apexlens/strategy/`.
+Every race from the second ingested season on is planned with data available before its start (strategy parameters from earlier races, a lap-pace model trained on earlier seasons, weather from the weekend's sessions) and compared with what happened. Method: `docs/methodology.md` §7, code: `src/apexlens/strategy/`.
 
-70 races; 57 dry races without a red flag are used for the strategy comparison (excluded: wet 2023-06, 2023-13, 2024-09, 2024-12, 2024-21, 2025-01, 2025-12, 2025-13; red flag 2023-03, 2023-19, 2023-20, 2024-04, 2024-08).
+88 races; 71 dry races without a red flag are used for the strategy comparison (excluded: wet 2023-06, 2023-13, 2024-09, 2024-12, 2024-21, 2025-01, 2025-12, 2025-13, 2026-16; red flag 2023-03, 2023-19, 2023-20, 2024-04, 2024-08, 2026-06, 2026-12, 2026-13).
 
-## All evaluated races (57 races)
+## All evaluated races (71 races)
 
 | Measure | Planner (lap-time costs only) | Planner (calibrated) | Copy previous race here | Most common stop count so far |
 |---|---|---|---|---|
-| Stop count = top-10's most common | 58% [46, 70] | 60% [47, 72] | 61% [47, 73] | 40% [28, 53] |
-| Stops + set of compounds = top-10's most common | 28% [18, 39] | 40% [28, 54] | 45% [31, 59] | – |
-| Starting compound = top-10's most common | 68% [56, 79] | 84% [74, 93] | 96% [90, 100] | – |
-| Stop count = winner's | 60% [47, 72] | 61% [49, 74] | – | – |
-| First stop vs top-10 with that stop count (laps) | 5.30 [3.93, 6.92] | 5.49 [4.23, 7.00] | 5.77 [3.72, 8.20] | – |
-| Top-10 first stops inside the planned window | 38% [27, 49] | 47% [36, 57] | – | – |
+| Stop count = top-10's most common | 61% [49, 72] | 62% [51, 73] | 58% [47, 69] | 45% [34, 56] |
+| Stops + set of compounds = top-10's most common | 30% [20, 41] | 44% [32, 55] | 42% [31, 55] | – |
+| Starting compound = top-10's most common | 63% [52, 75] | 82% [72, 90] | 90% [82, 97] | – |
+| Stop count = winner's | 59% [46, 70] | 62% [51, 72] | – | – |
+| First stop vs top-10 with that stop count (laps) | 5.79 [4.49, 7.17] | 5.62 [4.48, 6.95] | 5.51 [3.76, 7.53] | – |
+| Top-10 first stops inside the planned window | 35% [26, 45] | 44% [34, 53] | – | – |
 
 | Paired difference (same races) | Estimate [95% CI] |
 |---|---|
-| calibrated − previous race: stops match | -0.020 [-0.163, +0.143] |
-| calibrated − previous race: plan match | -0.061 [-0.224, +0.102] |
-| calibrated − previous race: start match | -0.143 [-0.265, -0.041] * |
-| calibrated − physical: stops match | +0.018 [-0.053, +0.105] |
-| calibrated − physical: plan match | +0.123 [+0.000, +0.246] |
-| calibrated − physical: start match | +0.158 [+0.018, +0.298] * |
-| calibrated − physical: first stop error | +0.295 [-0.830, +1.534] |
+| calibrated − previous race: stops match | +0.032 [-0.097, +0.161] |
+| calibrated − previous race: plan match | +0.000 [-0.145, +0.145] |
+| calibrated − previous race: start match | -0.097 [-0.194, +0.000] |
+| calibrated − physical: stops match | +0.014 [-0.070, +0.099] |
+| calibrated − physical: plan match | +0.141 [+0.014, +0.268] * |
+| calibrated − physical: start match | +0.183 [+0.056, +0.296] * |
+| calibrated − physical: first stop error | -0.074 [-1.306, +1.167] |
 
 ## Races without safety car or VSC (22 races)
 
@@ -48,44 +48,44 @@ Every race from the second ingested season on is planned with data available bef
 | calibrated − physical: start match | +0.136 [-0.091, +0.364] |
 | calibrated − physical: first stop error | +0.294 [-0.882, +1.706] |
 
-## Races with a safety car or VSC (35 races)
+## Races with a safety car or VSC (49 races)
 
 | Measure | Planner (lap-time costs only) | Planner (calibrated) | Copy previous race here | Most common stop count so far |
 |---|---|---|---|---|
-| Stop count = top-10's most common | 57% [40, 74] | 57% [40, 71] | 61% [43, 79] | 40% [26, 57] |
-| Stops + set of compounds = top-10's most common | 29% [14, 46] | 40% [23, 57] | 46% [29, 64] | – |
-| Starting compound = top-10's most common | 63% [49, 80] | 80% [66, 91] | 96% [89, 100] | – |
-| Stop count = winner's | 57% [40, 74] | 57% [40, 71] | – | – |
-| First stop vs top-10 with that stop count (laps) | 5.67 [3.74, 7.67] | 5.91 [4.02, 8.14] | 7.75 [4.32, 11.38] | – |
-| Top-10 first stops inside the planned window | 39% [25, 54] | 45% [30, 60] | – | – |
+| Stop count = top-10's most common | 61% [47, 73] | 61% [47, 73] | 56% [41, 71] | 47% [33, 61] |
+| Stops + set of compounds = top-10's most common | 31% [18, 43] | 45% [31, 57] | 41% [27, 56] | – |
+| Starting compound = top-10's most common | 57% [43, 71] | 78% [65, 88] | 88% [78, 98] | – |
+| Stop count = winner's | 57% [43, 69] | 59% [45, 71] | – | – |
+| First stop vs top-10 with that stop count (laps) | 6.28 [4.45, 8.25] | 5.99 [4.45, 7.77] | 6.83 [4.27, 9.89] | – |
+| Top-10 first stops inside the planned window | 34% [21, 47] | 41% [28, 53] | – | – |
 
 | Paired difference (same races) | Estimate [95% CI] |
 |---|---|
-| calibrated − previous race: stops match | -0.036 [-0.250, +0.179] |
-| calibrated − previous race: plan match | -0.071 [-0.286, +0.143] |
-| calibrated − previous race: start match | -0.214 [-0.357, -0.071] * |
-| calibrated − physical: stops match | +0.000 [-0.114, +0.114] |
-| calibrated − physical: plan match | +0.114 [-0.029, +0.257] |
-| calibrated − physical: start match | +0.171 [-0.029, +0.343] |
-| calibrated − physical: first stop error | +0.296 [-1.352, +2.370] |
+| calibrated − previous race: stops match | +0.049 [-0.122, +0.220] |
+| calibrated − previous race: plan match | +0.024 [-0.146, +0.195] |
+| calibrated − previous race: start match | -0.122 [-0.244, +0.000] |
+| calibrated − physical: stops match | +0.000 [-0.122, +0.122] |
+| calibrated − physical: plan match | +0.143 [+0.000, +0.286] |
+| calibrated − physical: start match | +0.204 [+0.061, +0.347] * |
+| calibrated − physical: first stop error | -0.243 [-2.027, +1.487] |
 
 ## Calibration
 
-Hidden costs fitted on earlier races (latest fit, 56 races): 10.0 s per pit stop (track position, traffic) and 27.5 s per SOFT stint (set availability after qualifying, graining). Agreement with the top-10's most common plan on those races: 54.5%.
+Hidden costs fitted on earlier races (latest fit, 70 races): 5.0 s per pit stop (track position, traffic) and 22.5 s per SOFT stint (set availability after qualifying, graining). Agreement with the top-10's most common plan on those races: 57.1%.
 
 ## Finishing order
 
 | Prediction | Rank correlation | Winner correct | Podium overlap | Position error |
 |---|---|---|---|---|
-| Planner (grid + pace blend) | 0.78 [0.74, 0.81] | 57% [46, 69] | 66% [60, 72] | 2.37 [2.21, 2.54] |
-| Grid order | 0.74 [0.70, 0.79] | 63% [51, 74] | 71% [66, 77] | 2.52 [2.30, 2.72] |
-| Pace order | 0.76 [0.72, 0.80] | 57% [46, 69] | 63% [57, 69] | 2.49 [2.32, 2.67] |
+| Planner (grid + pace blend) | 0.79 [0.75, 0.82] | 64% [53, 73] | 66% [61, 71] | 2.31 [2.15, 2.47] |
+| Grid order | 0.75 [0.72, 0.79] | 66% [55, 76] | 72% [67, 76] | 2.46 [2.28, 2.64] |
+| Pace order | 0.77 [0.73, 0.80] | 58% [48, 68] | 62% [57, 67] | 2.47 [2.31, 2.63] |
 
-Blend − grid order, rank correlation: +0.038 [+0.016, +0.060] *. Classified finishers only.
+Blend − grid order, rank correlation: +0.033 [+0.016, +0.051] *. Classified finishers only.
 
 ## Lap times
 
-The top-10's actual tyre sequences replayed through the model (570 driver-races, 28,507 representative laps): mean absolute error 2.87 [1.95, 3.95] s per lap vs 3.08 [2.16, 4.13] s for a constant lap time at the predicted pace (difference -0.207 [-0.277, -0.129] *). Most of the remaining error is the level of the race's lap times (estimated from qualifying), not the shape over the race.
+The top-10's actual tyre sequences replayed through the model (709 driver-races, 35,099 representative laps): mean absolute error 2.95 [2.13, 3.90] s per lap vs 3.09 [2.31, 4.00] s for a constant lap time at the predicted pace (difference -0.143 [-0.220, -0.065] *). Most of the remaining error is the level of the race's lap times (estimated from qualifying), not the shape over the race.
 
 ## Temperature
 
@@ -114,7 +114,7 @@ Adding a within-circuit track-temperature adjustment to the degradation slopes c
 | 2023-17 | lusail | M-M-M-H (3 stops) | 3 stop(s): HARD+MEDIUM | M-M-H-M (3 stops) | yes | SC/VSC |
 | 2023-18 | austin | M-M-H (2 stops) | 2 stop(s): HARD+MEDIUM | M-M-H (2 stops) | yes |  |
 | 2023-19 | mexico-city | M-H (1 stop) | – | – | not evaluated | SC/VSC |
-| 2023-20 | interlagos | M-H-M (2 stops) | – | – | not evaluated | SC/VSC |
+| 2023-20 | interlagos | M-M-H (2 stops) | – | – | not evaluated | SC/VSC |
 | 2023-21 | las-vegas | M-H (1 stop) | 2 stop(s): HARD+MEDIUM | M-H-H (2 stops) | no | SC/VSC |
 | 2023-22 | yas-marina | M-H (1 stop) | 2 stop(s): HARD+MEDIUM | M-H-H (2 stops) | no |  |
 | 2024-01 | bahrain | M-H-H (2 stops) | 2 stop(s): HARD+SOFT | S-H-S (2 stops) | no |  |
@@ -165,3 +165,21 @@ Adding a within-circuit track-temperature adjustment to the degradation slopes c
 | 2025-22 | las-vegas | M-H-H (2 stops) | 1 stop(s): HARD+MEDIUM | M-H (1 stop) | no | SC/VSC |
 | 2025-23 | lusail | M-H-H (2 stops) | 2 stop(s): HARD+MEDIUM | M-M-H (2 stops) | yes | SC/VSC |
 | 2025-24 | yas-marina | M-H (1 stop) | 1 stop(s): HARD+MEDIUM | M-H (1 stop) | yes |  |
+| 2026-01 | melbourne | M-H (1 stop) | 1 stop(s): HARD+MEDIUM | M-H (1 stop) | yes | SC/VSC |
+| 2026-02 | shanghai | M-H (1 stop) | 1 stop(s): HARD+MEDIUM | M-H (1 stop) | yes | SC/VSC |
+| 2026-03 | suzuka | M-H (1 stop) | 1 stop(s): HARD+MEDIUM | M-H (1 stop) | yes | SC/VSC |
+| 2026-04 | miami | M-H (1 stop) | 1 stop(s): HARD+MEDIUM | M-H (1 stop) | yes | SC/VSC |
+| 2026-05 | montreal | M-H (1 stop) | 1 stop(s): MEDIUM+SOFT | S-M (1 stop) | no | SC/VSC |
+| 2026-06 | monaco | M-H (1 stop) | – | – | not evaluated | SC/VSC |
+| 2026-07 | catalunya | M-H-H (2 stops) | 2 stop(s): HARD+MEDIUM | S-H-M-H (3 stops) | yes | SC/VSC |
+| 2026-08 | spielberg | M-M-H (2 stops) | 2 stop(s): HARD+MEDIUM | M-H-H (2 stops) | yes | SC/VSC |
+| 2026-09 | silverstone | M-H (1 stop) | 2 stop(s): HARD+MEDIUM+SOFT | M-H-S (2 stops) | no | SC/VSC |
+| 2026-10 | spa-francorchamps | M-H-H (2 stops) | 1 stop(s): HARD+MEDIUM | M-S (1 stop) | no | SC/VSC |
+| 2026-11 | hungaroring | M-H (1 stop) | 2 stop(s): HARD+MEDIUM | M-H-H-S (3 stops) | no | SC/VSC |
+| 2026-12 | zandvoort | M-H (1 stop) | – | – | not evaluated | SC/VSC |
+| 2026-13 | monza | M-H (1 stop) | – | – | not evaluated | SC/VSC |
+| 2026-14 | madring | M-H (1 stop) | 1 stop(s): HARD+MEDIUM | M-H (1 stop) | yes | SC/VSC |
+| 2026-15 | baku | M-H (1 stop) | 2 stop(s): MEDIUM+SOFT | M-S-S (2 stops) | no | SC/VSC |
+| 2026-16 | sepang | M-H (1 stop) | – | – | not evaluated | SC/VSC |
+| 2026-17 | marina-bay | M-H (1 stop) | 1 stop(s): MEDIUM+SOFT | S-M (1 stop) | no | SC/VSC |
+| 2026-18 | austin | M-H (1 stop) | 1 stop(s): HARD+MEDIUM | M-H (1 stop) | yes | SC/VSC |

@@ -33,33 +33,57 @@ describe how models use their inputs; they are associations learned from observa
   explorer, tyre & weather lab, race & lap explorer, explain a prediction, scenario laboratory, data &
   methodology.
 
+| Race week planner — Mexico City 2026, before the race | Plan vs what happened — Austin 2026 |
+|---|---|
+| ![Race week planner](docs/images/race_week.png) | ![Plan vs reality](docs/images/race_week_actual.png) |
+
 | Explain a prediction | Track explorer |
 |---|---|
 | ![Explain a prediction](docs/images/explain.png) | ![Track explorer](docs/images/track_explorer.png) |
 
 ## Results at a glance
 
-From evaluation run `20261026T182248Z` (2022–2025 data; the full, regenerated tables are in
-[`reports/`](reports/README.md)). Errors are in % of the session reference lap; 95% event-cluster
-bootstrap intervals.
+From evaluation run `20261027T075133Z` (2022–2026 data, 2026 up to the US GP on 25 October; the full,
+regenerated tables are in [`reports/`](reports/README.md)). Errors are in % of the session reference
+lap; 95% event-cluster bootstrap intervals.
 
-| Model A (lap pace), holdout season 2025 | MAE | ≈ seconds | 90% interval coverage |
+| Model A (lap pace), holdout season 2026 | MAE | ≈ seconds | 90% interval coverage |
 |---|---|---|---|
-| Team-adjusted form baseline | 0.855% | 0.752 s | 87.3% |
-| Ridge | 0.811% | 0.714 s | 87.0% |
-| LightGBM, pre-event | 0.779% | 0.685 s | 87.1% (wet laps 73.7%) |
-| LightGBM, pre-race (adds the weekend's qualifying) | 0.758% | 0.667 s | 87.1% |
+| Team-adjusted form baseline | 0.898% | 0.798 s | 87.7% |
+| Ridge | 0.877% | 0.776 s | 85.9% |
+| LightGBM, pre-event | 0.894% | 0.794 s | 85.0% |
+| LightGBM, pre-race (adds the weekend's qualifying) | 0.861% | 0.767 s | 85.1% |
 
-* LightGBM beats both baselines significantly. Before the weekend it is **not** significantly better than
-  Ridge or the spline GAM on the holdout (−0.032 pp, CI −0.067…+0.006); with qualifying known it is.
-* Intervals under-cover their nominal 90%, badly on wet laps — treat them as optimistic.
-* Car (team-season) differences explain about twice as much race-pace variance as stable driver
-  differences; once dry pace and car are accounted for, no driver's wet-weather or street-circuit
-  deviation is distinguishable from zero.
-* Driver corner-type specialisation (slow vs fast corners) is not repeatable between halves of a
-  season, and driver corner profiles do not improve sector-time predictions.
-* Error analysis shows form features lagging in-season car development (e.g. McLaren 2023 was predicted
-  too slow after its mid-season upgrade).
+* On the 2023–2025 development folds LightGBM is clearly best (e.g. 0.779% vs 0.855% for the baseline in
+  2025). On 2026 — new technical regulations — it is **not** significantly better than the team-form
+  baseline or Ridge (pre-event −0.004 pp vs baseline, CI −0.059…+0.055): the complex model's edge did not
+  survive the regulation change.
+* Knowing the weekend's qualifying helps: −0.033 pp on the 2026 holdout (CI −0.049…−0.016).
+* Intervals under-cover their nominal 90% (85% in 2026) — treat them as optimistic.
+* Car (team-season) differences explain far more race-pace variance than stable driver differences
+  (0.50 vs 0.08 %², after 2026 widened the gaps between cars); once dry pace and car are accounted for,
+  no driver's wet-weather, street-circuit or circuit-type deviation is distinguishable from zero.
+* Driver corner-type specialisation (slow vs fast corners) is not repeatable between halves of a season;
+  driver corner profiles improve sector-time predictions only negligibly (−0.002 pp).
+* Form features lag car development: Aston Martin ran 1.8% slower than predicted in the first half of
+  2026 and Mercedes 0.7% faster; McLaren 2023 was predicted too slow after its mid-season upgrade.
+
+**Race week planner backtest** (every race since 2023 planned with earlier data only, compared with what
+the top-10 finishers did; [report](reports/race_strategy.md)):
+
+| Matches the top-10's most common choice (71 dry races) | Planner | Copy last year's race |
+|---|---|---|
+| Number of stops | 62% (51–73%) | 58% (47–69%) |
+| Stops + set of compounds | 44% (32–55%) | 42% (31–55%) |
+| Starting compound | 82% (72–90%) | 90% (82–97%) |
+| 2026 only (new rules, 14 races): stops + compounds | 57% | 31% |
+
+* The planner is about as good as copying last year's race overall, and better in 2026 when last year's
+  cars no longer tell you much — but on 14 races that difference is not conclusive.
+* Finishing order (88 races): rank correlation 0.79 vs 0.75 for the starting grid (+0.033, CI
+  +0.016…+0.051); the winner is called in 64% of races vs 66% for "best-placed starter wins".
+* Replaying the top-10's actual strategies through the model gives lap times 0.14 s/lap closer to reality
+  than a constant-pace guess (CI 0.07–0.22 s).
 
 ## Quick start
 

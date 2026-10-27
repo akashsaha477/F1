@@ -84,3 +84,11 @@ def test_upcoming_race_and_errors(client):
     bad = client.post("/api/strategy/plan", json={"event_id": "2024-13", "driver_id": "nobody"})
     assert bad.status_code == 422 and bad.json()["error"]["code"] == "unsupported_scenario"
     assert client.post("/api/strategy/plan", json={"event_id": "1999-01", "driver_id": "x"}).status_code == 422
+
+
+def test_session_start_times_parse(paths):
+    from apexlens.strategy.data import StrategyData
+
+    s = StrategyData(paths).sessions
+    known = s["start_utc"].notna()
+    assert known.any() and s.loc[known, "start"].notna().all()  # date-only and full ISO timestamps mixed

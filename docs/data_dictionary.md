@@ -1,6 +1,6 @@
 # Data dictionary
 
-_Generated 2026-10-26 18:57 UTC by `scripts/generate_reports.py` from `data/processed (silver)`, `data/features (gold)`. Do not edit by hand; re-run the script._
+_Generated 2026-10-27 08:09 UTC by `scripts/generate_reports.py` from `data/processed (silver)`, `data/features (gold)`. Do not edit by hand; re-run the script._
 
 Generated from the stored Parquet tables: column, type, share non-null and an example value. Feature semantics are in `docs/feature_definitions.md`; sources and licences in `docs/data_sources.md`.
 
@@ -128,7 +128,7 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `best_s` | float64 | 99.1% | 110.8 |
 | `laps` | float64 | 49.5% | 22.0 |
 
-### `laps` — 248,360 rows
+### `laps` — 300,870 rows
 
 | Column | Type | Non-null | Example |
 |---|---|---|---|
@@ -138,41 +138,41 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `round` | int64 | 100.0% | 1 |
 | `session_code` | object | 100.0% | FP1 |
 | `session_type` | object | 100.0% | practice |
-| `driver_id` | object | 99.9% | alexander-albon |
-| `constructor_id` | object | 99.9% | williams |
+| `driver_id` | object | 100.0% | alexander-albon |
+| `constructor_id` | object | 100.0% | williams |
 | `circuit_id` | object | 100.0% | bahrain |
-| `driver_abbr` | object | 99.9% | ALB |
-| `driver_number` | object | 99.9% | 23 |
-| `team_name` | object | 99.9% | Williams |
+| `driver_abbr` | object | 100.0% | ALB |
+| `driver_number` | object | 100.0% | 23 |
+| `team_name` | object | 99.6% | Williams |
 | `lap_number` | Int64 | 100.0% | 1 |
-| `lap_time_s` | float64 | 86.6% | 98.92 |
-| `sector1_s` | float64 | 90.3% | 31.67 |
-| `sector2_s` | float64 | 99.1% | 50.555 |
+| `lap_time_s` | float64 | 86.5% | 98.92 |
+| `sector1_s` | float64 | 90.4% | 31.67 |
+| `sector2_s` | float64 | 99.2% | 50.555 |
 | `sector3_s` | float64 | 97.4% | 29.257 |
-| `session_time_end_s` | float64 | 99.9% | 1144.929 |
+| `session_time_end_s` | float64 | 100.0% | 1144.929 |
 | `lap_start_time_s` | float64 | 99.9% | 1030.741 |
 | `lap_start_utc` | datetime64[ns, UTC] | 99.9% | 2022-03-18 12:02:10.754000+00:00 |
 | `sector1_session_time_s` | float64 | 90.2% | 2333.612 |
-| `sector2_session_time_s` | float64 | 99.1% | 1115.684 |
+| `sector2_session_time_s` | float64 | 99.2% | 1115.684 |
 | `sector3_session_time_s` | float64 | 97.4% | 1144.929 |
 | `pit_in_time_s` | float64 | 13.0% | 1143.055 |
 | `pit_out_time_s` | float64 | 13.1% | 1030.741 |
 | `speed_i1_kph` | float64 | 99.6% | 209.0 |
-| `speed_i2_kph` | float64 | 98.8% | 234.0 |
-| `speed_fl_kph` | float64 | 86.8% | 278.0 |
+| `speed_i2_kph` | float64 | 98.9% | 234.0 |
+| `speed_fl_kph` | float64 | 86.9% | 278.0 |
 | `speed_st_kph` | float64 | 98.8% | 197.0 |
 | `compound_raw` | object | 99.6% | HARD |
 | `tyre_life_laps` | float64 | 99.5% | 1.0 |
-| `fresh_tyre` | boolean | 99.9% | True |
+| `fresh_tyre` | boolean | 100.0% | True |
 | `stint` | Int64 | 99.8% | 1 |
 | `position` | Int64 | 44.0% | 11 |
 | `track_status` | object | 99.9% | 1 |
 | `is_personal_best` | boolean | 99.9% | False |
 | `deleted` | boolean | 99.9% | False |
-| `deleted_reason` | object | 0.8% | TRACK LIMITS AT TURN 5 |
-| `fastf1_generated` | boolean | 99.9% | False |
-| `is_accurate` | boolean | 99.9% | False |
-| `quali_segment` | object | 12.2% | Q1 |
+| `deleted_reason` | object | 1.1% | TRACK LIMITS AT TURN 5 |
+| `fastf1_generated` | boolean | 100.0% | False |
+| `is_accurate` | boolean | 100.0% | False |
+| `quali_segment` | object | 12.6% | Q1 |
 | `weather_time_s` | float64 | 99.8% | 1134.3 |
 | `air_temp_c` | float64 | 99.8% | 19.9 |
 | `track_temp_c` | float64 | 99.8% | 36.0 |
@@ -195,10 +195,10 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `is_first_lap` | boolean | 100.0% | False |
 | `is_wet_compound` | bool | 100.0% | False |
 | `condition` | object | 100.0% | dry |
-| `exclusion_reason` | object | 34.9% | no_lap_time |
+| `exclusion_reason` | object | 35.4% | no_lap_time |
 | `is_clean` | bool | 100.0% | False |
 
-### `stints` — 34,575 rows
+### `stints` — 41,820 rows
 
 | Column | Type | Non-null | Example |
 |---|---|---|---|
@@ -221,7 +221,7 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `session_code` | object | 100.0% | FP1 |
 | `constructor_id` | object | 100.0% | williams |
 
-### `weather_observations` — 45,853 rows
+### `weather_observations` — 54,779 rows
 
 | Column | Type | Non-null | Example |
 |---|---|---|---|
@@ -237,7 +237,7 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `wind_dir_deg` | float64 | 100.0% | 3.0 |
 | `wind_speed_ms` | float64 | 100.0% | 0.9 |
 
-### `race_control_events` — 20,350 rows
+### `race_control_events` — 28,580 rows
 
 | Column | Type | Non-null | Example |
 |---|---|---|---|
@@ -245,16 +245,16 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `event_id` | object | 100.0% | 2022-01 |
 | `season` | int64 | 100.0% | 2022 |
 | `time_utc` | datetime64[ns, UTC] | 100.0% | 2022-03-18 11:45:14+00:00 |
-| `lap` | float64 | 44.9% | 1.0 |
+| `lap` | float64 | 45.5% | 1.0 |
 | `category` | object | 100.0% | Other |
 | `message` | object | 100.0% | RISK OF RAIN FOR F1 FIRST PRACTICE SESSI… |
-| `status` | object | 4.4% | DISABLED |
-| `flag` | object | 49.3% | YELLOW |
-| `scope` | object | 49.3% | Sector |
-| `sector` | float64 | 27.7% | 11.0 |
-| `racing_number` | object | 14.8% | 16 |
+| `status` | object | 3.5% | DISABLED |
+| `flag` | object | 51.8% | YELLOW |
+| `scope` | object | 51.8% | Sector |
+| `sector` | float64 | 30.5% | 11.0 |
+| `racing_number` | object | 14.9% | 16 |
 
-### `track_status_events` — 10,379 rows
+### `track_status_events` — 15,260 rows
 
 | Column | Type | Non-null | Example |
 |---|---|---|---|
@@ -262,16 +262,16 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `event_id` | object | 100.0% | 2022-01 |
 | `season` | int64 | 100.0% | 2022 |
 | `time_utc` | datetime64[ns, UTC] | 100.0% | 2022-03-18 11:56:42+00:00 |
-| `lap` | float64 | 45.5% | 1.0 |
+| `lap` | float64 | 48.1% | 1.0 |
 | `category` | object | 100.0% | Flag |
 | `message` | object | 100.0% | YELLOW IN TRACK SECTOR 11 |
-| `status` | object | 3.3% | DEPLOYED |
-| `flag` | object | 96.7% | YELLOW |
-| `scope` | object | 96.7% | Sector |
-| `sector` | float64 | 54.2% | 11.0 |
-| `racing_number` | object | 21.1% | 27 |
+| `status` | object | 3.0% | DEPLOYED |
+| `flag` | object | 97.0% | YELLOW |
+| `scope` | object | 97.0% | Sector |
+| `sector` | float64 | 57.0% | 11.0 |
+| `racing_number` | object | 22.6% | 27 |
 
-### `telemetry_laps` — 2,178 rows
+### `telemetry_laps` — 2,696 rows
 
 | Column | Type | Non-null | Example |
 |---|---|---|---|
@@ -319,7 +319,7 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `z_m` | float64 | 100.0% | -15.9186 |
 | `lap_key` | object | 100.0% | charles-leclerc:14 |
 
-### `corner_markers` — 7,725 rows
+### `corner_markers` — 9,030 rows
 
 | Column | Type | Non-null | Example |
 |---|---|---|---|
@@ -336,21 +336,21 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `rotation_deg` | float64 | 100.0% | 92.0 |
 | `source` | object | 100.0% | fastf1_circuit_info |
 
-### `session_drivers` — 9,159 rows
+### `session_drivers` — 11,119 rows
 
 | Column | Type | Non-null | Example |
 |---|---|---|---|
 | `session_id` | object | 100.0% | 2022-01-FP1 |
 | `driver_abbr` | object | 100.0% | VER |
-| `driver_number` | object | 86.9% | 1 |
+| `driver_number` | object | 89.2% | 1 |
 | `team` | object | 100.0% | Red Bull Racing |
-| `first_name` | object | 86.9% | Max |
-| `last_name` | object | 86.9% | Verstappen |
-| `team_colour` | object | 86.9% | 1e5bc6 |
+| `first_name` | object | 89.2% | Max |
+| `last_name` | object | 89.2% | Verstappen |
+| `team_colour` | object | 89.2% | 1e5bc6 |
 
 ## Gold layer
 
-### `all_laps_relative` — 248,051 rows
+### `all_laps_relative` — 300,561 rows
 
 | Column | Type | Non-null | Example |
 |---|---|---|---|
@@ -365,7 +365,7 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `constructor_id` | object | 100.0% | williams |
 | `driver_abbr` | object | 100.0% | ALB |
 | `lap_number` | Int64 | 100.0% | 1 |
-| `lap_time_s` | float64 | 86.7% | 98.92 |
+| `lap_time_s` | float64 | 86.5% | 98.92 |
 | `sector1_s` | float64 | 90.4% | 31.67 |
 | `sector2_s` | float64 | 99.2% | 50.555 |
 | `sector3_s` | float64 | 97.4% | 29.257 |
@@ -373,30 +373,30 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `tyre_life_laps` | float64 | 99.5% | 1.0 |
 | `fresh_tyre` | boolean | 100.0% | True |
 | `stint` | Int64 | 99.8% | 1 |
-| `position` | Int64 | 44.0% | 11 |
+| `position` | Int64 | 44.1% | 11 |
 | `track_status` | object | 100.0% | 1 |
-| `air_temp_c` | float64 | 99.8% | 19.9 |
-| `track_temp_c` | float64 | 99.8% | 36.0 |
-| `humidity_pct` | float64 | 99.8% | 37.0 |
-| `rainfall` | boolean | 99.8% | False |
-| `wind_speed_ms` | float64 | 99.8% | 0.6 |
+| `air_temp_c` | float64 | 99.9% | 19.9 |
+| `track_temp_c` | float64 | 99.9% | 36.0 |
+| `humidity_pct` | float64 | 99.9% | 37.0 |
+| `rainfall` | boolean | 99.9% | False |
+| `wind_speed_ms` | float64 | 99.9% | 0.6 |
 | `is_clean` | bool | 100.0% | False |
-| `exclusion_reason` | object | 34.9% | no_lap_time |
+| `exclusion_reason` | object | 35.3% | no_lap_time |
 | `condition` | object | 100.0% | dry |
 | `is_wet_compound` | bool | 100.0% | False |
 | `is_pit_in_lap` | bool | 100.0% | True |
 | `is_pit_out_lap` | bool | 100.0% | True |
 | `deleted` | boolean | 100.0% | False |
-| `quali_segment` | object | 12.2% | Q1 |
+| `quali_segment` | object | 12.6% | Q1 |
 | `speed_st_kph` | float64 | 98.9% | 197.0 |
 | `lap_start_utc` | object | 100.0% | 2022-03-18 12:02:10.754000+00:00 |
 | `session_ref_s` | float64 | 100.0% | 98.864 |
 | `session_ref_n` | float64 | 100.0% | 223.0 |
-| `rel_pace_pct` | float64 | 86.7% | 0.0566 |
-| `drv_session_median_s` | float64 | 99.3% | 98.92 |
+| `rel_pace_pct` | float64 | 86.5% | 0.0566 |
+| `drv_session_median_s` | float64 | 99.4% | 98.92 |
 | `is_representative` | bool | 100.0% | False |
 
-### `lap_features` — 109,348 rows
+### `lap_features` — 132,628 rows
 
 | Column | Type | Non-null | Example |
 |---|---|---|---|
@@ -411,15 +411,15 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `constructor_id` | object | 100.0% | williams |
 | `driver_abbr` | object | 100.0% | ALB |
 | `lap_number` | Int64 | 100.0% | 1 |
-| `lap_time_s` | float64 | 99.3% | 107.636 |
-| `sector1_s` | float64 | 97.7% | 32.027 |
+| `lap_time_s` | float64 | 99.1% | 107.636 |
+| `sector1_s` | float64 | 97.6% | 32.027 |
 | `sector2_s` | float64 | 99.8% | 46.031 |
 | `sector3_s` | float64 | 99.7% | 24.844 |
 | `compound` | object | 100.0% | SOFT |
 | `tyre_life_laps` | float64 | 99.0% | 1.0 |
 | `fresh_tyre` | float64 | 100.0% | 1.0 |
-| `stint` | Int64 | 99.6% | 1 |
-| `position` | Int64 | 99.9% | 11 |
+| `stint` | Int64 | 99.7% | 1 |
+| `position` | Int64 | 99.8% | 11 |
 | `track_status` | object | 100.0% | 1 |
 | `air_temp_c` | float64 | 100.0% | 23.9 |
 | `track_temp_c` | float64 | 100.0% | 29.1 |
@@ -427,7 +427,7 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `rainfall` | float64 | 100.0% | 0.0 |
 | `wind_speed_ms` | float64 | 100.0% | 0.5 |
 | `is_clean` | bool | 100.0% | False |
-| `exclusion_reason` | object | 18.2% | race_start_lap |
+| `exclusion_reason` | object | 18.7% | race_start_lap |
 | `condition` | object | 100.0% | dry |
 | `is_wet_compound` | float64 | 100.0% | 0.0 |
 | `is_pit_in_lap` | bool | 100.0% | False |
@@ -438,17 +438,17 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `lap_start_utc` | object | 100.0% | 2022-03-20 15:03:34.889000+00:00 |
 | `session_ref_s` | float64 | 100.0% | 99.3225 |
 | `session_ref_n` | float64 | 100.0% | 854.0 |
-| `rel_pace_pct` | float64 | 99.3% | 8.3702 |
+| `rel_pace_pct` | float64 | 99.1% | 8.3702 |
 | `drv_session_median_s` | float64 | 99.9% | 100.8 |
 | `is_representative` | bool | 100.0% | False |
-| `drv_form_pace` | float64 | 98.3% | 1.4876 |
+| `drv_form_pace` | float64 | 98.6% | 1.4876 |
 | `drv_form_n` | int64 | 100.0% | 0 |
-| `drv_teammate_gap_form` | float64 | 98.5% | -0.3202 |
-| `drv_quali_form` | float64 | 98.5% | 2.3256 |
-| `drv_circuit_hist` | float64 | 58.4% | -0.3096 |
-| `team_form_pace` | float64 | 98.6% | 1.6477 |
-| `team_quali_form` | float64 | 98.7% | 2.8611 |
-| `team_season_form` | float64 | 94.8% | 1.6477 |
+| `drv_teammate_gap_form` | float64 | 98.7% | -0.3202 |
+| `drv_quali_form` | float64 | 98.7% | 2.3256 |
+| `drv_circuit_hist` | float64 | 62.2% | -0.3096 |
+| `team_form_pace` | float64 | 98.7% | 1.6477 |
+| `team_quali_form` | float64 | 98.8% | 2.8611 |
+| `team_season_form` | float64 | 95.0% | 1.6477 |
 | `team_season_events` | int64 | 100.0% | 0 |
 | `evt_quali_gap` | float64 | 99.0% | 2.3256 |
 | `evt_team_quali_gap` | float64 | 99.9% | 2.8611 |
@@ -457,8 +457,8 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `circuit_length_km` | float64 | 100.0% | 5.412 |
 | `circuit_turns` | int64 | 100.0% | 15 |
 | `laps` | int64 | 100.0% | 57 |
-| `sprint_laps` | float64 | 28.4% | 21.0 |
-| `circuit_ref_lap_s` | float64 | 73.9% | 99.3225 |
+| `sprint_laps` | float64 | 30.5% | 21.0 |
+| `circuit_ref_lap_s` | float64 | 76.8% | 99.3225 |
 | `race_progress` | float64 | 100.0% | 0.0175 |
 | `is_sprint` | bool | 100.0% | False |
 | `circuit_is_street` | bool | 100.0% | False |
@@ -466,7 +466,7 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `circuit_frac_fast` | float64 | 100.0% | 0.2222 |
 | `circuit_full_throttle_frac` | float64 | 100.0% | 0.7138 |
 
-### `driver_session_summary` — 8,912 rows
+### `driver_session_summary` — 10,844 rows
 
 | Column | Type | Non-null | Example |
 |---|---|---|---|
@@ -487,10 +487,10 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `robust_sd` | float64 | 100.0% | 1.9923 |
 | `se_rel_pace` | float64 | 100.0% | 1.2485 |
 | `is_wet_session` | bool | 100.0% | False |
-| `teammate_med_rel_pace` | float64 | 98.1% | -1.0934 |
-| `teammate_gap` | float64 | 98.1% | -0.4734 |
+| `teammate_med_rel_pace` | float64 | 98.0% | -1.0934 |
+| `teammate_gap` | float64 | 98.0% | -0.4734 |
 
-### `driver_event_form` — 1,839 rows
+### `driver_event_form` — 2,235 rows
 
 | Column | Type | Non-null | Example |
 |---|---|---|---|
@@ -501,24 +501,24 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `round` | int64 | 100.0% | 1 |
 | `date` | datetime64[ns] | 100.0% | 2022-03-20 00:00:00 |
 | `circuit_id` | object | 100.0% | bahrain |
-| `pace` | float64 | 96.9% | 1.4876 |
-| `tm_gap` | float64 | 94.6% | -0.3202 |
-| `is_wet` | object | 96.9% | False |
-| `evt_quali_gap` | float64 | 99.0% | 2.3256 |
-| `pace_dry` | float64 | 88.7% | 1.4876 |
-| `drv_form_pace` | float64 | 98.2% | 1.4876 |
+| `pace` | float64 | 97.0% | 1.4876 |
+| `tm_gap` | float64 | 94.8% | -0.3202 |
+| `is_wet` | object | 97.0% | False |
+| `evt_quali_gap` | float64 | 98.9% | 2.3256 |
+| `pace_dry` | float64 | 89.5% | 1.4876 |
+| `drv_form_pace` | float64 | 98.4% | 1.4876 |
 | `drv_form_n` | int64 | 100.0% | 0 |
-| `drv_teammate_gap_form` | float64 | 98.3% | -0.3202 |
-| `drv_quali_form` | float64 | 98.3% | 2.3256 |
-| `team_form_pace` | float64 | 98.5% | 1.6477 |
-| `team_quali_form` | float64 | 98.6% | 2.8611 |
-| `team_season_form` | float64 | 94.6% | 1.6477 |
+| `drv_teammate_gap_form` | float64 | 98.5% | -0.3202 |
+| `drv_quali_form` | float64 | 98.6% | 2.3256 |
+| `team_form_pace` | float64 | 98.6% | 1.6477 |
+| `team_quali_form` | float64 | 98.7% | 2.8611 |
+| `team_season_form` | float64 | 94.5% | 1.6477 |
 | `team_season_events` | int64 | 100.0% | 0 |
 | `evt_team_quali_gap` | float64 | 99.9% | 2.8611 |
-| `pace_vs_form` | float64 | 87.0% | -0.3096 |
-| `drv_circuit_hist` | float64 | 56.8% | -0.3096 |
+| `pace_vs_form` | float64 | 88.1% | -0.3096 |
+| `drv_circuit_hist` | float64 | 60.7% | -0.3096 |
 
-### `driver_profiles` — 89 rows
+### `driver_profiles` — 112 rows
 
 | Column | Type | Non-null | Example |
 |---|---|---|---|
@@ -528,26 +528,26 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `teams` | object | 100.0% | williams |
 | `n_dry_races` | int64 | 100.0% | 21 |
 | `n_laps` | int64 | 100.0% | 838 |
-| `race_pace_adj` | float64 | 100.0% | 0.0135 |
-| `race_pace_adj_sd` | float64 | 100.0% | 0.127 |
-| `race_pace_adj_lo` | float64 | 100.0% | -0.1953 |
-| `race_pace_adj_hi` | float64 | 100.0% | 0.2224 |
+| `race_pace_adj` | float64 | 100.0% | -0.011 |
+| `race_pace_adj_sd` | float64 | 100.0% | 0.115 |
+| `race_pace_adj_lo` | float64 | 100.0% | -0.2002 |
+| `race_pace_adj_hi` | float64 | 100.0% | 0.1782 |
 | `race_pace_raw` | float64 | 100.0% | 0.4518 |
-| `team_effect` | float64 | 100.0% | 0.7148 |
-| `team_effect_sd` | float64 | 100.0% | 0.1896 |
+| `team_effect` | float64 | 100.0% | 0.7887 |
+| `team_effect_sd` | float64 | 100.0% | 0.2542 |
 | `teammate_gap_race` | float64 | 100.0% | -0.6425 |
-| `teammate_gap_race_lo` | float64 | 96.6% | -0.7298 |
-| `teammate_gap_race_hi` | float64 | 96.6% | -0.5061 |
+| `teammate_gap_race_lo` | float64 | 97.3% | -0.7298 |
+| `teammate_gap_race_hi` | float64 | 97.3% | -0.5061 |
 | `n_teammate_races` | int64 | 100.0% | 20 |
 | `consistency_sd` | float64 | 100.0% | 0.4704 |
-| `consistency_lo` | float64 | 96.6% | 0.3987 |
-| `consistency_hi` | float64 | 96.6% | 0.5035 |
-| `quali_adj` | float64 | 100.0% | -0.0061 |
-| `quali_adj_sd` | float64 | 100.0% | 0.1524 |
+| `consistency_lo` | float64 | 97.3% | 0.3987 |
+| `consistency_hi` | float64 | 97.3% | 0.5035 |
+| `quali_adj` | float64 | 100.0% | -0.0459 |
+| `quali_adj_sd` | float64 | 100.0% | 0.1394 |
 | `quali_gap_median` | float64 | 100.0% | 2.5986 |
 | `quali_teammate_gap` | float64 | 100.0% | -0.7032 |
-| `quali_teammate_gap_lo` | float64 | 95.5% | -1.1096 |
-| `quali_teammate_gap_hi` | float64 | 95.5% | -0.4053 |
+| `quali_teammate_gap_lo` | float64 | 96.4% | -1.1096 |
+| `quali_teammate_gap_hi` | float64 | 96.4% | -0.4053 |
 | `n_quali` | int64 | 100.0% | 17 |
 | `n_quali_teammate` | int64 | 100.0% | 17 |
 | `lap1_gain_mean` | float64 | 100.0% | 0.7895 |
@@ -562,30 +562,31 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `outcome_mechanical_or_reliability` | int64 | 100.0% | 1 |
 | `outcome_other` | int64 | 100.0% | 0 |
 | `outcome_tyre_or_puncture` | int64 | 100.0% | 0 |
+| `outcome_unspecified` | int64 | 100.0% | 0 |
 | `outcome_withdrawn_or_health` | int64 | 100.0% | 0 |
 | `race_pace_adj_pctile` | float64 | 95.5% | 47.3684 |
 | `consistency_pctile` | float64 | 95.5% | 47.3684 |
-| `quali_adj_pctile` | float64 | 95.5% | 47.3684 |
+| `quali_adj_pctile` | float64 | 95.5% | 57.8947 |
 | `rank_reference` | object | 100.0% | drivers of the same season with >= 5 dry… |
 
-### `driver_condition_effects` — 154 rows
+### `driver_condition_effects` — 158 rows
 
 | Column | Type | Non-null | Example |
 |---|---|---|---|
 | `driver_id` | object | 100.0% | alexander-albon |
-| `raw` | float64 | 100.0% | -0.1983 |
-| `n_sessions` | int64 | 100.0% | 6 |
-| `n_laps` | int64 | 100.0% | 116 |
-| `posterior_mean` | float64 | 100.0% | -0.0401 |
-| `posterior_sd` | float64 | 100.0% | 0.1275 |
-| `tau` | float64 | 100.0% | 0.1428 |
-| `raw_se` | float64 | 100.0% | 0.2837 |
+| `raw` | float64 | 100.0% | 0.0291 |
+| `n_sessions` | int64 | 100.0% | 7 |
+| `n_laps` | int64 | 100.0% | 122 |
+| `posterior_mean` | float64 | 100.0% | 0.0066 |
+| `posterior_sd` | float64 | 100.0% | 0.125 |
+| `tau` | float64 | 100.0% | 0.1421 |
+| `raw_se` | float64 | 100.0% | 0.2635 |
 | `dimension` | object | 100.0% | wet_race |
 | `status` | object | 100.0% | not_distinguishable_from_zero |
 | `unit` | object | 100.0% | % of lap |
-| `seasons` | object | 100.0% | 2022-2025 |
+| `seasons` | object | 100.0% | 2022-2026 |
 
-### `driver_session_adjusted` — 2,140 rows
+### `driver_session_adjusted` — 2,637 rows
 
 | Column | Type | Non-null | Example |
 |---|---|---|---|
@@ -596,11 +597,11 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `resid_robust_sd` | float64 | 100.0% | 0.4704 |
 | `ref_compound` | object | 100.0% | SOFT |
 | `adjusted_for` | object | 100.0% | compound+age+lap |
-| `fuel_slope_pct_per_lap` | float64 | 85.2% | -0.0852 |
+| `fuel_slope_pct_per_lap` | float64 | 83.4% | -0.0852 |
 | `ar1_rho` | float64 | 100.0% | 0.4151 |
-| `deg_soft_pct_per_lap` | float64 | 58.0% | 0.1808 |
-| `deg_medium_pct_per_lap` | float64 | 91.1% | 0.1477 |
-| `deg_hard_pct_per_lap` | float64 | 76.1% | 0.1585 |
+| `deg_soft_pct_per_lap` | float64 | 64.5% | 0.1808 |
+| `deg_medium_pct_per_lap` | float64 | 92.2% | 0.1477 |
+| `deg_hard_pct_per_lap` | float64 | 76.8% | 0.1585 |
 | `constructor_id` | object | 100.0% | williams |
 | `session_id` | object | 100.0% | 2022-01-R |
 | `event_id` | object | 100.0% | 2022-01 |
@@ -610,30 +611,30 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `condition` | object | 100.0% | dry |
 | `wet_share` | float64 | 100.0% | 0.0 |
 | `date` | datetime64[ns] | 100.0% | 2022-03-20 00:00:00 |
-| `deg_intermediate_pct_per_lap` | float64 | 7.1% | 0.0544 |
-| `deg_wet_pct_per_lap` | float64 | 0.8% | 0.2264 |
-| `teammate_gap` | float64 | 95.4% | -0.6445 |
+| `deg_intermediate_pct_per_lap` | float64 | 6.3% | 0.0544 |
+| `deg_wet_pct_per_lap` | float64 | 0.7% | 0.2264 |
+| `teammate_gap` | float64 | 95.3% | -0.6445 |
 
-### `team_season_effects` — 40 rows
+### `team_season_effects` — 51 rows
 
 | Column | Type | Non-null | Example |
 |---|---|---|---|
 | `level` | object | 100.0% | alfa-romeo:2022 |
-| `estimate` | float64 | 100.0% | 0.0917 |
-| `pev` | float64 | 100.0% | 0.0509 |
+| `estimate` | float64 | 100.0% | 0.0935 |
+| `pev` | float64 | 100.0% | 0.0704 |
 
-### `driver_clusters` — 81 rows
+### `driver_clusters` — 103 rows
 
 | Column | Type | Non-null | Example |
 |---|---|---|---|
 | `driver_id` | object | 100.0% | alexander-albon |
 | `season` | int64 | 100.0% | 2022 |
 | `main_team` | object | 100.0% | williams |
-| `pc1` | float64 | 100.0% | -1.6446 |
-| `pc2` | float64 | 100.0% | 2.2686 |
+| `pc1` | float64 | 100.0% | -1.9557 |
+| `pc2` | float64 | 100.0% | 1.3643 |
 | `cluster` | int32 | 100.0% | 0 |
 
-### `corner_definitions` — 1,164 rows
+### `corner_definitions` — 1,391 rows
 
 | Column | Type | Non-null | Example |
 |---|---|---|---|
@@ -668,7 +669,7 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `season` | int64 | 100.0% | 2022 |
 | `session_code` | object | 100.0% | Q |
 
-### `corner_metrics` — 22,802 rows
+### `corner_metrics` — 27,684 rows
 
 | Column | Type | Non-null | Example |
 |---|---|---|---|
@@ -678,10 +679,10 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `min_speed_kph` | float64 | 100.0% | 70.0 |
 | `exit_speed_kph` | float64 | 100.0% | 286.7238 |
 | `min_speed_s` | float64 | 100.0% | 726.0 |
-| `brake_onset_before_apex_m` | float64 | 62.6% | 116.0 |
+| `brake_onset_before_apex_m` | float64 | 62.7% | 116.0 |
 | `braking_duration_s` | float64 | 100.0% | 2.879 |
-| `full_throttle_delay_s` | float64 | 89.0% | 3.641 |
-| `full_throttle_after_apex_m` | float64 | 89.0% | 122.0 |
+| `full_throttle_delay_s` | float64 | 88.3% | 3.641 |
+| `full_throttle_after_apex_m` | float64 | 88.3% | 122.0 |
 | `min_gear` | float64 | 100.0% | 2.0 |
 | `gear_changes` | int64 | 100.0% | 9 |
 | `max_decel_proxy_ms2` | float64 | 100.0% | 61.6319 |
@@ -694,15 +695,15 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `lap_time_s` | float64 | 100.0% | 90.558 |
 | `compound` | object | 100.0% | SOFT |
 | `lap_session_time_s` | float64 | 100.0% | 4487.968 |
-| `quali_segment` | object | 90.6% | Q3 |
+| `quali_segment` | object | 92.2% | Q3 |
 | `session_id` | object | 100.0% | 2022-01-Q |
 | `event_id` | object | 100.0% | 2022-01 |
 | `season` | int64 | 100.0% | 2022 |
 | `session_code` | object | 100.0% | Q |
 | `delta_to_best_s` | float64 | 100.0% | 0.0721 |
 | `teammate_comparable` | bool | 100.0% | True |
-| `delta_to_teammate_s` | float64 | 40.9% | 0.0115 |
-| `min_speed_delta_to_teammate_kph` | float64 | 40.9% | -2.0 |
+| `delta_to_teammate_s` | float64 | 42.0% | 0.0115 |
+| `min_speed_delta_to_teammate_kph` | float64 | 42.0% | -2.0 |
 | `category` | object | 100.0% | slow |
 | `is_hairpin` | bool | 100.0% | False |
 | `is_chicane` | bool | 100.0% | False |
@@ -710,7 +711,7 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `method` | object | 100.0% | marker |
 | `sector` | int64 | 100.0% | 1 |
 
-### `driver_corner_profiles` — 259 rows
+### `driver_corner_profiles` — 325 rows
 
 | Column | Type | Non-null | Example |
 |---|---|---|---|
@@ -718,32 +719,32 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `season` | int64 | 100.0% | 2022 |
 | `category` | object | 100.0% | fast |
 | `delta_pct` | float64 | 100.0% | -0.6061 |
-| `ci_lo` | float64 | 91.5% | -2.6329 |
-| `ci_hi` | float64 | 91.5% | 0.9061 |
+| `ci_lo` | float64 | 93.2% | -2.6329 |
+| `ci_hi` | float64 | 93.2% | 0.9061 |
 | `min_speed_delta_kph` | float64 | 100.0% | -3.3026 |
 | `n_sessions` | int64 | 100.0% | 7 |
 | `n_corners` | int64 | 100.0% | 21 |
 
-### `circuit_profiles` — 25 rows
+### `circuit_profiles` — 27 rows
 
 | Column | Type | Non-null | Example |
 |---|---|---|---|
 | `circuit_id` | object | 100.0% | austin |
 | `circuit_layout_id` | object | 100.0% | austin-1 |
-| `reference_session` | object | 100.0% | 2025-19-Q |
-| `n_sessions` | int64 | 100.0% | 4 |
+| `reference_session` | object | 100.0% | 2026-18-Q |
+| `n_sessions` | int64 | 100.0% | 5 |
 | `n_corners` | int64 | 100.0% | 16 |
 | `n_flat_out` | int64 | 100.0% | 5 |
 | `circuit_frac_slow` | float64 | 100.0% | 0.5455 |
-| `circuit_frac_medium` | float64 | 100.0% | 0.0909 |
-| `circuit_frac_fast` | float64 | 100.0% | 0.3636 |
-| `circuit_full_throttle_frac` | float64 | 100.0% | 0.6549 |
-| `mean_min_speed_kph` | float64 | 100.0% | 147.0305 |
-| `length_m` | float64 | 100.0% | 5422.0 |
-| `marker_precision` | float64 | 100.0% | 1.0 |
-| `marker_recall` | float64 | 100.0% | 0.95 |
+| `circuit_frac_medium` | float64 | 100.0% | 0.1818 |
+| `circuit_frac_fast` | float64 | 100.0% | 0.2727 |
+| `circuit_full_throttle_frac` | float64 | 100.0% | 0.6528 |
+| `mean_min_speed_kph` | float64 | 100.0% | 141.3062 |
+| `length_m` | float64 | 100.0% | 5426.0 |
+| `marker_precision` | float64 | 92.6% | 1.0 |
+| `marker_recall` | float64 | 92.6% | 0.9 |
 
-### `sector_profiles` — 276 rows
+### `sector_profiles` — 330 rows
 
 | Column | Type | Non-null | Example |
 |---|---|---|---|
@@ -762,7 +763,7 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `full_throttle_frac` | float64 | 100.0% | 0.748 |
 | `boundary_laps` | int64 | 100.0% | 20 |
 
-### `track_maps` — 47,183 rows
+### `track_maps` — 56,448 rows
 
 | Column | Type | Non-null | Example |
 |---|---|---|---|
@@ -776,7 +777,7 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `season` | int64 | 100.0% | 2022 |
 | `session_code` | object | 100.0% | Q |
 
-### `tyre_stints` — 4,159 rows
+### `tyre_stints` — 5,058 rows
 
 | Column | Type | Non-null | Example |
 |---|---|---|---|
@@ -801,7 +802,7 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `date` | datetime64[ns] | 100.0% | 2022-03-20 00:00:00 |
 | `circuit_id` | object | 100.0% | bahrain |
 
-### `tyre_degradation` — 12 rows
+### `tyre_degradation` — 15 rows
 
 | Column | Type | Non-null | Example |
 |---|---|---|---|
@@ -814,19 +815,19 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `n_sessions` | int64 | 100.0% | 20 |
 | `slope_s_per_lap` | float64 | 100.0% | 0.0375 |
 
-### `tyre_degradation_circuit` — 71 rows
+### `tyre_degradation_circuit` — 79 rows
 
 | Column | Type | Non-null | Example |
 |---|---|---|---|
 | `circuit_id` | object | 100.0% | austin |
 | `compound` | object | 100.0% | HARD |
-| `slope_pct` | float64 | 100.0% | 0.0453 |
-| `ci_lo` | float64 | 83.1% | 0.0326 |
-| `ci_hi` | float64 | 83.1% | 0.0757 |
-| `n_stints` | int64 | 100.0% | 66 |
-| `n_sessions` | int64 | 100.0% | 4 |
+| `slope_pct` | float64 | 100.0% | 0.0488 |
+| `ci_lo` | float64 | 79.7% | 0.0326 |
+| `ci_hi` | float64 | 79.7% | 0.0649 |
+| `n_stints` | int64 | 100.0% | 83 |
+| `n_sessions` | int64 | 100.0% | 5 |
 
-### `driver_tyre_effects` — 260 rows
+### `driver_tyre_effects` — 329 rows
 
 | Column | Type | Non-null | Example |
 |---|---|---|---|
@@ -835,10 +836,10 @@ Generated from the stored Parquet tables: column, type, share non-null and an ex
 | `raw` | float64 | 100.0% | 0.0016 |
 | `n_stints` | int64 | 100.0% | 12 |
 | `n_sessions` | int64 | 100.0% | 10 |
-| `posterior_mean` | float64 | 100.0% | 0.0003 |
-| `posterior_sd` | float64 | 100.0% | 0.0063 |
-| `tau` | float64 | 100.0% | 0.007 |
-| `raw_se` | float64 | 100.0% | 0.0146 |
+| `posterior_mean` | float64 | 100.0% | 0.0004 |
+| `posterior_sd` | float64 | 100.0% | 0.0074 |
+| `tau` | float64 | 100.0% | 0.0083 |
+| `raw_se` | float64 | 100.0% | 0.0157 |
 | `compound` | object | 100.0% | HARD |
 | `status` | object | 100.0% | not_distinguishable_from_zero |
 

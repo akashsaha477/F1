@@ -1,6 +1,6 @@
 # Feature definitions
 
-_Generated 2026-10-26 18:57 UTC by `scripts/generate_reports.py` from `src/apexlens/features/definitions.py`. Do not edit by hand; re-run the script._
+_Generated 2026-10-27 08:10 UTC by `scripts/generate_reports.py` from `src/apexlens/features/definitions.py`. Do not edit by hand; re-run the script._
 
 Each feature with its meaning, unit, derivation, sources, availability and known limitations. Availability: `static` (known before the season), `pre_event` (only events that finished before the event's first session), `pre_race` (adds the same weekend's qualifying), `scenario` (a condition set by the user or observed on the lap), `target` (never an input).
 
