@@ -62,6 +62,18 @@ class ExplainRequest(BaseModel):
     comparison: ComparisonRequest | None = None
 
 
+class PredictionSubmission(BaseModel):
+    """A player's top ten for a race, P1 first."""
+
+    player: str = Field(..., min_length=1, max_length=40, description="Display name; the same name updates the entry")
+    picks: list[str] = Field(..., min_length=10, max_length=10, description="driver_id of P1 … P10")
+
+
+class SettleRequest(BaseModel):
+    fetch: bool = Field(False, description="Pull F1DB and re-ingest the season's results before scoring")
+    laps: bool = Field(True, description="With fetch: also ingest the race's lap timing for the race week planner")
+
+
 class StrategyRequest(BaseModel):
     """Race-week strategy plan for one driver (and optionally another team's car)."""
 

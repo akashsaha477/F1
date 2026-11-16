@@ -51,6 +51,8 @@ ad-hoc SQL.
 | `evaluation` | Metrics with event-cluster bootstrap, temporal splits, error analysis |
 | `explainability` | Global (SHAP, permutation, ALE), local narratives and counterfactuals, explanation validation |
 | `predictions` | Scenario construction from historical form, prediction payloads, comparisons |
+| `strategy` | Race week planner: strategy parameters, exact optimiser, calibration, pace, finishing order, weather, backtest |
+| `game` | Prediction game: scoring and leaderboard, JSON store, the model and AI entrants, settling a race from fetched results |
 | `services` | Read models for the API (catalogue, sessions, profiles, tracks, tyres, methodology) |
 | `schemas` | Pydantic request models |
 | `api` | FastAPI app, routes, dependency wiring, structured errors |

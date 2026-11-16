@@ -8,7 +8,7 @@ from __future__ import annotations
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field, field_validator
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -42,7 +42,16 @@ class Settings(BaseSettings):
 
     api_cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 
-    @field_validator("f1db_local_path", mode="before")
+    # prediction game: the AI entrant (Claude). The key is read under its standard name so the SDK and this app
+    # agree; leave it unset to use the SDK's own credential resolution (e.g. `ant auth login`).
+    game_ai_enabled: bool = True
+    game_ai_model: str = "claude-opus-5-5"
+    anthropic_api_key: str | None = Field(None, validation_alias=AliasChoices("ANTHROPIC_API_KEY", "APEXLENS_ANTHROPIC_API_KEY"))
+    # when set, settling a race over the API (which fetches data) needs this value in the X-Admin-Token header;
+    # predictions never need it. Set it on a public deployment.
+    game_admin_token: str | None = None
+
+    @field_validator("f1db_local_path", "anthropic_api_key", "game_admin_token", mode="before")
     @classmethod
     def _empty_path_is_none(cls, v):
         if v in ("", None):

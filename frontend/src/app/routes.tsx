@@ -9,9 +9,11 @@ import RaceExplorerPage from "../pages/RaceExplorer";
 import ScenarioLabPage from "../pages/ScenarioLab";
 import MethodologyPage from "../pages/Methodology";
 import RaceStrategyPage from "../pages/RaceStrategy";
+import PredictionGamePage from "../pages/PredictionGame";
 
 export const routes: { path: string; element: ReactElement }[] = [
   { path: "/", element: <OverviewPage /> },
+  { path: "/game", element: <PredictionGamePage /> },
   { path: "/race-week", element: <RaceStrategyPage /> },
   { path: "/drivers", element: <DriverExplorerPage /> },
   { path: "/compare", element: <DriverComparisonPage /> },

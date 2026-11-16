@@ -22,6 +22,10 @@ import type {
   RaceWeek,
   StrategyRequest,
   StrategyResponse,
+  GameEventDetail,
+  GameEventSummary,
+  GameLeaderboard,
+  GameRules,
 } from "../types/api";
 
 const STALE = 5 * 60 * 1000;
@@ -121,3 +125,29 @@ export const useRaceWeeks = () =>
   useQuery({ queryKey: ["race-weeks"], queryFn: () => getJson<{ race_weeks: RaceWeek[] }>("/strategy/race-weeks"), staleTime: STALE });
 export const useStrategyPlan = () =>
   useMutation({ mutationFn: (r: StrategyRequest) => postJson<StrategyResponse>("/strategy/plan", r) });
+
+// -- prediction game ---------------------------------------------------------------------------
+export const useGameRules = () => useQuery({ queryKey: ["game-rules"], queryFn: () => getJson<GameRules>("/game/rules"), staleTime: Infinity });
+export const useGameEvents = () =>
+  useQuery({ queryKey: ["game-events"], queryFn: () => getJson<{ events: GameEventSummary[] }>("/game/events"), staleTime: 60 * 1000 });
+/** The race's game state; refetches while the AI entrant is still thinking. */
+export const useGameEvent = (event_id?: string, player?: string, enabled = true) =>
+  useQuery({
+    queryKey: ["game-event", event_id, player],
+    queryFn: () => getJson<GameEventDetail>(`/game/events/${event_id}${qs({ player })}`),
+    enabled: enabled && !!event_id,
+    staleTime: 10 * 1000,
+    retry: false,
+    refetchInterval: (q) => (q.state.data?.ai_pending ? 3000 : false),
+    // typing your name re-keys the query; keep the same race on screen meanwhile so the picks form is not reset
+    placeholderData: (prev) => (prev && prev.event.event_id === event_id ? prev : undefined),
+  });
+export const useSubmitPrediction = (event_id: string) =>
+  useMutation({ mutationFn: (r: { player: string; picks: string[] }) => postJson<GameEventDetail>(`/game/events/${event_id}/predictions`, r) });
+export const useSettleRace = (event_id: string) =>
+  useMutation({
+    mutationFn: ({ token, ...r }: { fetch: boolean; laps?: boolean; token?: string }) =>
+      postJson<GameEventDetail>(`/game/events/${event_id}/settle`, r, token ? { "X-Admin-Token": token } : {}),
+  });
+export const useGameLeaderboard = (season?: number) =>
+  useQuery({ queryKey: ["game-leaderboard", season], queryFn: () => getJson<GameLeaderboard>(`/game/leaderboard${qs({ season })}`), staleTime: 60 * 1000 });

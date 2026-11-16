@@ -13,8 +13,9 @@ from fastapi.responses import JSONResponse
 
 from apexlens import __version__
 from apexlens.api.deps import paths
-from apexlens.api.routes import catalog, drivers, models, predictions, sessions, strategy, tracks, tyres
+from apexlens.api.routes import catalog, drivers, game, models, predictions, sessions, strategy, tracks, tyres
 from apexlens.config import get_settings
+from apexlens.game.service import Forbidden, GameError
 from apexlens.predictions.service import ScenarioError
 from apexlens.services.data_service import NotFound
 
@@ -48,6 +49,14 @@ def create_app() -> FastAPI:
     async def scenario_error(_, exc: ScenarioError):
         return error(422, "unsupported_scenario", str(exc))
 
+    @app.exception_handler(GameError)
+    async def game_error(_, exc: GameError):
+        return error(422, "game_error", str(exc))
+
+    @app.exception_handler(Forbidden)
+    async def forbidden(_, exc: Forbidden):
+        return error(403, "forbidden", str(exc))
+
     @app.exception_handler(RequestValidationError)
     async def validation(_, exc: RequestValidationError):
         msgs = "; ".join(f"{'.'.join(str(p) for p in e['loc'])}: {e['msg']}" for e in exc.errors())
@@ -66,7 +75,7 @@ def create_app() -> FastAPI:
                          "models": (p.models / "production.json").exists()}}
 
     for r in (catalog.router, sessions.router, drivers.router, drivers.effects_router, predictions.router, models.router,
-              tracks.router, tyres.router, strategy.router):
+              tracks.router, tyres.router, strategy.router, game.router):
         app.include_router(r, prefix="/api")
     return app
 

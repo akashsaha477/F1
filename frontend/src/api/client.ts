@@ -35,11 +35,11 @@ export async function getJson<T>(path: string): Promise<T> {
   return handle<T>(await fetch(`${BASE}/api${path}`));
 }
 
-export async function postJson<T>(path: string, body: unknown): Promise<T> {
+export async function postJson<T>(path: string, body: unknown, headers: Record<string, string> = {}): Promise<T> {
   return handle<T>(
     await fetch(`${BASE}/api${path}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...headers },
       body: JSON.stringify(body),
     }),
   );

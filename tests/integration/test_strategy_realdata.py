@@ -76,6 +76,7 @@ def test_plan_with_another_car_and_grid(client):
 
 def test_upcoming_race_and_errors(client):
     weeks = client.get("/api/strategy/race-weeks").json()["race_weeks"]
+    assert any(w["race_start_utc"] for w in weeks)  # the prediction game's deadline
     upcoming = [w for w in weeks if w["status"] == "upcoming"]
     if upcoming:  # the plan uses the line-up after the last ingested race
         r = client.post("/api/strategy/plan", json={"event_id": upcoming[0]["event_id"], "driver_id": "lando-norris"})

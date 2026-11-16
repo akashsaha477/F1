@@ -15,7 +15,7 @@ RUN apt-get update \
 WORKDIR /app
 COPY pyproject.toml README.md LICENSE ./
 COPY src ./src
-RUN pip install .
+RUN pip install ".[ai]"
 COPY scripts ./scripts
 COPY docs ./docs
 

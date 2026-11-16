@@ -100,6 +100,26 @@ class F1DBSource:
                        check=True, capture_output=True, timeout=900)
         return self.data_path
 
+    def refresh(self) -> bool:
+        """Pull the latest F1DB data (new results appear within days of a race). Returns whether anything changed.
+        A plain data directory (no ``.git``) cannot be refreshed; a failed pull is logged and the existing data kept."""
+        self.ensure_checkout()
+        if not (self.repo_path / ".git").exists():
+            log.warning("F1DB at %s is not a git checkout; cannot refresh", self.repo_path)
+            return False
+        before = self.commit()
+        try:
+            subprocess.run(["git", "-C", str(self.repo_path), "pull", "--ff-only"],
+                           check=True, capture_output=True, text=True, timeout=900)
+        except (subprocess.SubprocessError, FileNotFoundError) as exc:
+            err = getattr(exc, "stderr", "") or str(exc)
+            log.warning("F1DB pull failed, keeping the current checkout: %s", err.strip()[:300])
+            return False
+        after = self.commit()
+        log.info("F1DB %s", f"updated {before[:8] if before else '?'} -> {after[:8] if after else '?'}" if after != before
+                 else "already up to date")
+        return after != before
+
     def commit(self) -> str | None:
         try:
             out = subprocess.run(["git", "-C", str(self.repo_path), "rev-parse", "HEAD"],

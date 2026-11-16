@@ -61,9 +61,17 @@ class StrategyService:
         rows = []
         for e in ev[ev["season"] >= first].sort_values("date").itertuples():
             status = "past" if e.event_id in with_data else ("upcoming" if e.date >= today else "no_timing_data")
+            start = self.race_start(e.event_id)
             rows.append({"event_id": e.event_id, "season": int(e.season), "round": int(e.round), "name": e.official_name,
-                         "circuit_id": e.circuit_id, "date": str(e.date.date()), "status": status})
+                         "circuit_id": e.circuit_id, "date": str(e.date.date()), "status": status,
+                         "race_start_utc": start.isoformat().replace("+00:00", "Z") if start is not None else None})
         return rows
+
+    def race_start(self, event_id: str) -> pd.Timestamp | None:
+        """Scheduled race start (UTC) from the F1DB schedule, when known."""
+        s = self.data.sessions
+        start = s[(s["event_id"] == event_id) & (s["session_code"] == "R")]["start"]
+        return None if start.empty or pd.isna(start.iloc[0]) else start.iloc[0]
 
     # -- pieces --------------------------------------------------------------------------------
     @cached_property
@@ -107,15 +115,14 @@ class StrategyService:
         s = get_settings()
         if not s.weather_forecast_enabled or event["circuit_id"] not in self.data.circuits.index:
             return None
-        start = self.data.sessions[(self.data.sessions["event_id"] == event["event_id"])
-                                   & (self.data.sessions["session_code"] == "R")]["start"]
-        if start.empty or pd.isna(start.iloc[0]):
+        start = self.race_start(event["event_id"])
+        if start is None:
             return None
         c = self.data.circuits.loc[event["circuit_id"]]
         http = HttpClient(cache_dir=self.paths.cache, timeout_s=10, max_retries=1)
         try:
             return OpenMeteoSource(http, s.weather_forecast_base).race_forecast(float(c["latitude"]), float(c["longitude"]),
-                                                                                start.iloc[0])
+                                                                                start)
         except Exception as exc:  # noqa: BLE001 - a forecast must never break planning
             return {"error": f"forecast unavailable: {exc}"}
         finally:
@@ -141,28 +148,32 @@ class StrategyService:
             raise ScenarioError(f"unknown event {event_id}")
         return self.data.events.loc[event_id]
 
-    # -- main entry ----------------------------------------------------------------------------
-    def plan(self, event_id: str, driver_id: str, constructor_override: str | None = None, grid_position: int | None = None,
-             max_stops: int = 3, window_s: float = 2.0, weather_overrides: dict | None = None) -> dict:
+    # -- shared pieces: weather scenario and the predicted field ------------------------------
+    def weather_for(self, event_id: str, overrides: dict | None = None) -> dict:
+        """Weekend sessions, circuit history, forecast (upcoming races) and the scenario the plan assumes."""
         ev = self.event(event_id)
         has_data = event_id in set(self.data.races["event_id"])
-        season = int(ev["season"])
-        mode = "past" if has_data else "upcoming"
         warnings: list[str] = []
-
         weekend = WX.weekend_sessions(self.data, event_id)
         clim = WX.climatology(self.data, ev["circuit_id"], ev["date"])
         forecast = None if has_data else self._forecast(ev)
         if forecast and "error" in forecast:
             warnings.append(f"Weather forecast: {forecast['error']}; using the circuit's history.")
-        scen = WX.scenario(weekend, clim, forecast if forecast and "error" not in forecast else None,
-                           weather_overrides or {})
+        scen = WX.scenario(weekend, clim, forecast if forecast and "error" not in forecast else None, overrides or {})
         if scen["values"].get("wet_race_likely"):
             warnings.append("Rain is likely: the plan below is for a dry race; wet-tyre strategies are not optimised.")
+        return {"weekend_sessions": weekend, "circuit_history": clim, "forecast": forecast, "assumed": scen,
+                "warnings": warnings}
 
-        strat = self.strategy_for(event_id, max_stops, window_s)
-        p = strat["params"]
-
+    def field_order(self, event_id: str, weather: dict, *, driver_id: str | None = None,
+                    constructor_override: str | None = None, grid_position: int | None = None) -> dict:
+        """Every driver's expected pace and the predicted finishing order (grid/pace blend). For a past race the
+        model is the fold trained before that season and the grid is the actual one; for an upcoming race the
+        production model and the line-up after the last ingested race, with the grid predicted from qualifying form."""
+        ev = self.event(event_id)
+        has_data = event_id in set(self.data.races["event_id"])
+        season = int(ev["season"])
+        warnings: list[str] = []
         model, model_note = season_model(self.paths, season, production=not has_data)
         if not has_data:
             last = int(self.data.races["season"].max())
@@ -171,11 +182,13 @@ class StrategyService:
             if season > last:
                 warnings.append(f"The models were trained on {int(self.data.races['season'].min())}–{last} cars; "
                                 f"{season} cars may behave differently.")
-        overrides = {driver_id: constructor_override} if constructor_override else None
+        overrides = {driver_id: constructor_override} if constructor_override and driver_id else None
         field = base_paces(self.pred, model, event_id=event_id if has_data else None,
-                           circuit_id=None if has_data else ev["circuit_id"], weather=scen["values"], overrides=overrides)
-        if driver_id not in set(field["driver_id"]):
+                           circuit_id=None if has_data else ev["circuit_id"], weather=weather, overrides=overrides)
+        if driver_id is not None and driver_id not in set(field["driver_id"]):
             raise ScenarioError(f"{driver_id} has no pace estimate for {event_id} (did not take part, or no earlier races)")
+        if field.empty:
+            raise ScenarioError(f"no pace estimates for {event_id}: no drivers with earlier races")
 
         res = ACT.classified(self.data, event_id) if has_data else pd.DataFrame(columns=["driver_id", "grid_position", "position"])
         field = field.merge(res[["driver_id", "grid_position", "position"]], on="driver_id", how="left").rename(
@@ -185,7 +198,7 @@ class StrategyService:
         if not (has_data and field["grid"].notna().any()):
             q = field["drv_quali_form"].astype(float)
             field["grid"] = q.fillna(q.max() + 1 if q.notna().any() else 0).rank(method="first")
-        if grid_position is not None:
+        if grid_position is not None and driver_id is not None:
             others = field["driver_id"] != driver_id
             g = field.loc[others, "grid"].rank(method="first")
             field.loc[others, "grid"] = np.where(g >= grid_position, g + 1, g)
@@ -193,6 +206,48 @@ class StrategyService:
             grid_source = "your input for this driver; others shifted"
         w, n_w = self.blend_weight(ev["date"])
         order = RACE.predict_order(field, w)
+        return {"order": order, "pace_model": model_note, "grid_source": grid_source, "blend_weight": w,
+                "blend_weight_races": n_w, "warnings": warnings, "has_data": has_data}
+
+    def _field_rows(self, order: pd.DataFrame) -> list[dict]:
+        return [{"driver_id": r.driver_id, "name": self.pred.driver_name(r.driver_id), "constructor_id": r.constructor_id,
+                 "grid": int(r.grid_used), "base_pct": float(r.base_pct), "pace_rank": int(r.pace_rank),
+                 "predicted_position": int(r.predicted_position),
+                 "actual_position": int(r.position) if pd.notna(r.position) else None}
+                for r in order.itertuples()]
+
+    def finishing_order(self, event_id: str) -> dict:
+        """The predicted classified order of the whole field — what the prediction game freezes before a race."""
+        ev = self.event(event_id)
+        wx = self.weather_for(event_id)
+        fo = self.field_order(event_id, wx["assumed"]["values"])
+        return {
+            "event": {"event_id": event_id, "name": ev["official_name"], "circuit_id": ev["circuit_id"],
+                      "circuit_name": self._circuit_name(ev["circuit_id"]), "date": str(ev["date"].date()),
+                      "season": int(ev["season"]), "round": int(ev["round"]), "laps": int(ev["laps"]),
+                      "mode": "past" if fo["has_data"] else "upcoming"},
+            "field": self._field_rows(fo["order"]), "pace_model": fo["pace_model"], "grid_source": fo["grid_source"],
+            "blend_weight": fo["blend_weight"], "blend_weight_races": fo["blend_weight_races"],
+            "weather": wx["assumed"]["values"], "warnings": wx["warnings"] + fo["warnings"],
+            "data_as_of": str(self.last_data_date.date()),
+        }
+
+    # -- main entry ----------------------------------------------------------------------------
+    def plan(self, event_id: str, driver_id: str, constructor_override: str | None = None, grid_position: int | None = None,
+             max_stops: int = 3, window_s: float = 2.0, weather_overrides: dict | None = None) -> dict:
+        ev = self.event(event_id)
+        has_data = event_id in set(self.data.races["event_id"])
+        season = int(ev["season"])
+        mode = "past" if has_data else "upcoming"
+
+        wx = self.weather_for(event_id, weather_overrides)
+        scen = wx["assumed"]
+        strat = self.strategy_for(event_id, max_stops, window_s)
+        p = strat["params"]
+        fo = self.field_order(event_id, scen["values"], driver_id=driver_id, constructor_override=constructor_override,
+                              grid_position=grid_position)
+        warnings = wx["warnings"] + fo["warnings"]
+        order = fo["order"]
         me = order[order["driver_id"] == driver_id].iloc[0]
         base = float(me["base_pct"])
 
@@ -206,8 +261,9 @@ class StrategyService:
                       "laps": int(ev["laps"]), "mode": mode},
             "driver": {"driver_id": driver_id, "name": self.pred.driver_name(driver_id), "constructor_id": me["constructor_id"],
                        "car_override": constructor_override},
-            "weather": {"weekend_sessions": weekend, "circuit_history": clim, "forecast": forecast,
-                        "race_actual": WX.race_weather(self.data, event_id) if has_data else None, "assumed": scen},
+            "weather": {"weekend_sessions": wx["weekend_sessions"], "circuit_history": wx["circuit_history"],
+                        "forecast": wx["forecast"], "race_actual": WX.race_weather(self.data, event_id) if has_data else None,
+                        "assumed": scen},
             "parameters": _param_view(p),
             "calibration": strat["calibration"],
             "plans": [_plan_view(q) for q in plans[:SHOWN_PLANS]],
@@ -217,13 +273,9 @@ class StrategyService:
                       "alternative_label": alt["label"] if alt else None},
             "expected_race_time_s": float(sum(r["lap_time_s"] for r in trace)),
             "prediction": {
-                "pace_model": model_note, "base_pct": base, "grid": int(me["grid_used"]), "grid_source": grid_source,
-                "predicted_position": int(me["predicted_position"]), "blend_weight": w, "blend_weight_races": n_w,
-                "field": [{"driver_id": r.driver_id, "name": self.pred.driver_name(r.driver_id), "constructor_id": r.constructor_id,
-                           "grid": int(r.grid_used), "base_pct": float(r.base_pct), "pace_rank": int(r.pace_rank),
-                           "predicted_position": int(r.predicted_position),
-                           "actual_position": int(r.position) if pd.notna(r.position) else None}
-                          for r in order.itertuples()],
+                "pace_model": fo["pace_model"], "base_pct": base, "grid": int(me["grid_used"]), "grid_source": fo["grid_source"],
+                "predicted_position": int(me["predicted_position"]), "blend_weight": fo["blend_weight"],
+                "blend_weight_races": fo["blend_weight_races"], "field": self._field_rows(order),
             },
             "warnings": warnings + ([f"Rule: {n}" for n in p.rule_notes]),
             "limitations": LIMITATIONS,

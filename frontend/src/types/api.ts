@@ -548,6 +548,82 @@ export interface RaceWeek {
   circuit_id: string;
   date: string;
   status: "past" | "upcoming" | "no_timing_data";
+  race_start_utc?: string | null;
+}
+
+// -- prediction game ---------------------------------------------------------------------------
+export type GameStatus = "open" | "locked" | "settled" | "unavailable";
+
+export interface GameEventSummary extends RaceWeek {
+  deadline_utc: string;
+  game_status: GameStatus;
+  players: number;
+}
+
+export interface GameDriver { driver_id: string; name: string; constructor_id: string }
+
+export interface GamePickScore { position: number; driver_id: string; actual_position: number | null; points: number; outcome: string }
+
+export interface GameScore {
+  points: number; picks: GamePickScore[]; bonuses: { name: string; points: number }[]; exact: number; in_top_ten: number;
+  podium: boolean; winner: boolean;
+}
+
+export interface GameEntry {
+  key: string;
+  kind: "player" | "model" | "ai";
+  name: string;
+  status: "ok" | "pending" | "error" | "unavailable";
+  submitted_at: string | null;
+  reason?: string | null;
+  picks?: string[] | null;
+  note?: string | null;
+  rationale?: string | null;
+  data_as_of?: string | null;
+  score?: GameScore | null;
+}
+
+export interface GameStanding { rank: number; key: string; name: string; kind: GameEntry["kind"]; points: number; exact: number }
+
+export interface GameEventDetail {
+  event: { event_id: string; name: string; season: number; round: number; circuit_id: string; circuit_name: string | null; date: string;
+    laps: number | null };
+  status: GameStatus;
+  deadline_utc: string;
+  opened_at: string;
+  field: GameDriver[];
+  entries: GameEntry[];
+  revealed: boolean;
+  you: string | null;
+  model_warnings: string[];
+  result: { settled_at: string; classified: { position: number; driver_id: string; name: string; constructor_id: string | null }[];
+    not_classified: string[]; not_in_field: string[] } | null;
+  standings: GameStanding[] | null;
+  ai_pending: boolean;
+}
+
+export interface GameLeaderboardRow {
+  rank: number; key: string; name: string; kind: GameEntry["kind"]; points: number; races: number; exact: number; podiums: number;
+  winners: number; race_wins: number; best_race: number; average: number;
+}
+
+export interface GameLeaderboard {
+  season: number | null;
+  races: { event_id: string; name: string; round: number; season: number; date: string; leader: GameStanding | null;
+    points: Record<string, number> }[];
+  rows: GameLeaderboardRow[];
+}
+
+export interface GameRules {
+  picks: number;
+  per_pick: { outcome: string; condition: string; points: number }[];
+  bonuses: { name: string; condition: string; points: number }[];
+  max_points: number;
+  deadline: string;
+  result: string;
+  bots: string;
+  entrants: { key: string; name: string; kind: string }[];
+  settle_protected: boolean;
 }
 
 export interface PitWindow { stop: number; best_lap: number; from_lap: number; to_lap: number }

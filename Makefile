@@ -2,7 +2,7 @@ PY ?= .venv/bin/python
 SEASONS ?= 2022-2026
 
 .PHONY: help install ingest-small ingest coverage features train evaluate reports pipeline api frontend \
-        frontend-build test test-fast lint check docker-up docker-pipeline
+        frontend-build test test-fast lint check docker-up docker-pipeline game-settle game-leaderboard
 
 help:                    ## list targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | sed 's/:.*## /\t/'
@@ -42,6 +42,12 @@ frontend:                ## Vite dev server on :5173 (proxies /api to :8000)
 
 frontend-build:
 	cd frontend && npm run build
+
+game-settle:             ## after a race weekend: fetch the result and score the prediction game (EVENT=2026-21)
+	$(PY) scripts/game.py settle $(EVENT) --fetch
+
+game-leaderboard:        ## prediction game standings
+	$(PY) scripts/game.py leaderboard
 
 test:                    ## all Python tests (real-data tests skip when data/ is absent)
 	$(PY) -m pytest

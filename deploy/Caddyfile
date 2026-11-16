@@ -1,0 +1,5 @@
+# HTTPS for the dashboard; the API is reached through the dashboard's /api proxy (same origin).
+{$APEXLENS_DOMAIN} {
+	encode gzip
+	reverse_proxy web:80
+}

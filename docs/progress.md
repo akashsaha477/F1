@@ -152,3 +152,11 @@ Findings: on 2026 the lap-pace LightGBM (0.894%) is no longer better than the te
 Ridge (0.877%); pre-race qualifying information still helps (−0.033 pp). Car differences dominate driver
 differences even more (team-season 0.50 vs driver 0.08 %²). Form features lag the 2026 order (Aston Martin
 1.8% slower, Mercedes 0.7% faster than predicted in the first half).
+
+## Prediction game
+- [x] `game/` package: scoring (10 exact · 6 one off · 3 two off · 1 anywhere in the top ten; +10 podium set, +25 perfect ten; 135 max), a JSON store under `data/game/events`, the service lifecycle (open → predict → locked → settled) and the season leaderboard
+- [x] Two bot entrants on every scoreboard: the **ApexLens model** (the race week planner's finishing order, frozen into the race record the first time the race is opened, with `data_as_of`, so it can never be re-run with the actual grid) and **Claude (AI)** (optional `anthropic` extra; asked once, when the first prediction arrives, with the line-up, the last three races, last year's race and the expected weather — not the model's order)
+- [x] Hidden-until-you-commit reveal: a player sees the bots' picks only after submitting; other players' picks stay hidden until the race starts; predictions can be changed until the scheduled start (F1DB session time, UTC)
+- [x] Settling: `POST /api/game/events/{id}/settle` (or `python scripts/game.py settle 2026-21 --fetch`) pulls the F1DB checkout — `F1DBSource.refresh()` is new: the sparse clone was never updated before — re-ingests the season's results and the race's lap timing, resets the API singletons and scores everyone against the classified result
+- [x] `StrategyService` refactored into `weather_for` / `field_order` shared by `plan()` and the new `finishing_order()`; `race_weeks` now carries `race_start_utc`
+- [x] API `/api/game/rules|events|events/{id}|events/{id}/predictions|events/{id}/settle|leaderboard`; dashboard page *Prediction game*; unit tests (scoring, leaderboard, AI parsing, lifecycle with a fake strategy and clock), an HTTP test that predicts, locks and scores Bahrain 2024 from the fixture result, and page tests

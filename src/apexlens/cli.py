@@ -85,6 +85,36 @@ def cmd_coverage(args, ctx):
     print(json.dumps(rep["summary"], indent=2))
 
 
+def cmd_game(args, ctx):
+    from apexlens.api.deps import game_service
+
+    svc = game_service()
+    if args.action == "settle":
+        v = svc.settle(args.event, fetch=args.fetch, laps=not args.no_laps)
+        print(f"{v['event']['name']} — settled {v['result']['settled_at']}")
+        for s in v["standings"]:
+            print(f"  {s['rank']:>2}. {s['name']:<24} {s['points']:>4} pts  ({s['exact']} exact)")
+    elif args.action == "settle-due":
+        res = svc.settle_due(fetch=args.fetch, laps=not args.no_laps)
+        if not res:
+            print("nothing due: no predicted race has started without being scored")
+        for r in res:
+            print(f"{r['event_id']} {r['name']}: {r['status']}" + (f" — {r['reason']}" if r["status"] == "skipped" else ""))
+            for s in r.get("standings") or []:
+                print(f"  {s['rank']:>2}. {s['name']:<24} {s['points']:>4} pts")
+    elif args.action == "open":
+        v = svc.event(args.event)
+        model = next(e for e in v["entries"] if e["kind"] == "model")
+        print(f"{v['event']['name']} — {v['status']}, deadline {v['deadline_utc']}")
+        print("ApexLens model: " + ", ".join(f"P{i} {d}" for i, d in enumerate(model["picks"] or [], 1)))
+    elif args.action == "leaderboard":
+        lb = svc.leaderboard(args.season)
+        print(f"{len(lb['races'])} race(s) settled")
+        for r in lb["rows"]:
+            print(f"  {r['rank']:>2}. {r['name']:<24} {r['points']:>4} pts  {r['races']} races, {r['exact']} exact, "
+                  f"{r['race_wins']} race wins")
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="apexlens", description=__doc__)
     p.add_argument("-v", "--verbose", action="store_true")
@@ -118,6 +148,21 @@ def build_parser() -> argparse.ArgumentParser:
 
     s = sub.add_parser("coverage", help="write the data coverage report")
     s.set_defaults(func=cmd_coverage)
+
+    s = sub.add_parser("game", help="prediction game: open a race, settle it after the weekend, print the leaderboard")
+    gs = s.add_subparsers(dest="action", required=True)
+    g = gs.add_parser("settle", help="score a race, e.g. 2026-21 (results must be ingested, or pass --fetch)")
+    g.add_argument("event")
+    g.add_argument("--fetch", action="store_true", help="pull F1DB and re-ingest the season's results first")
+    g.add_argument("--no-laps", action="store_true", help="with --fetch: skip the race's lap timing")
+    g = gs.add_parser("settle-due", help="score every predicted race that has started (for a weekly cron job)")
+    g.add_argument("--fetch", action="store_true")
+    g.add_argument("--no-laps", action="store_true")
+    g = gs.add_parser("open", help="open a race for predictions now (freezes the model's order) and print it")
+    g.add_argument("event")
+    g = gs.add_parser("leaderboard")
+    g.add_argument("--season", type=int)
+    s.set_defaults(func=cmd_game)
     return p
 
 

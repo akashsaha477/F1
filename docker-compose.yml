@@ -25,7 +25,7 @@ services:
       - ./data:/app/data
       - ./reports:/app/reports
     command: >
-      sh -c "python scripts/ingest_season.py --seasons $${SEASONS:-2022-2025} --telemetry &&
+      sh -c "python scripts/ingest_season.py --seasons $${SEASONS:-2022-2026} --telemetry &&
              python scripts/build_features.py &&
              python scripts/train_models.py &&
              python scripts/evaluate_models.py &&

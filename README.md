@@ -29,9 +29,12 @@ describe how models use their inputs; they are associations learned from observa
   (forecast, weekend sessions or circuit history), the best dry tyre strategy with pit windows from an
   exact optimisation, expected lap times, the predicted finishing order — and for past races what really
   happened, plus a backtest of every race since 2023 against what the top-10 actually did.
-* **Ten-page dashboard** — overview, race week planner, driver explorer, driver comparison, track
-  explorer, tyre & weather lab, race & lap explorer, explain a prediction, scenario laboratory, data &
-  methodology.
+* **Prediction game** — call the top ten before a race; once you have committed you see what the ApexLens
+  model and an AI (Claude) predicted; after the weekend one click fetches the result, scores everyone and
+  updates a season leaderboard where the model and the AI compete alongside the players.
+* **Eleven-page dashboard** — overview, prediction game, race week planner, driver explorer, driver
+  comparison, track explorer, tyre & weather lab, race & lap explorer, explain a prediction, scenario
+  laboratory, data & methodology.
 
 | Race week planner — Mexico City 2026, before the race | Plan vs what happened — Austin 2026 |
 |---|---|
@@ -125,6 +128,32 @@ make docker-pipeline         # run the full pipeline in a container, writing ./d
 make docker-up               # API on :8000, dashboard (nginx) on :8080
 ```
 
+To put it on a server — free student options, HTTPS, and the daily job that scores the prediction game —
+see [deploy/README.md](deploy/README.md) (`bash deploy/setup.sh` on a fresh Ubuntu VM).
+
+### Prediction game
+
+Open *Prediction game* in the dashboard, pick the next race, enter a name and your P1–P10. Three things
+happen around that:
+
+1. **Before the race** — the first time a race is opened, the model's finishing order (the race week
+   planner's grid/pace blend) is frozen into `data/game/events/<event>.json` with the date of the data it
+   had seen, so it can never be re-run later with the real grid. The AI entrant is asked once, when the first
+   prediction arrives, and only sees what a person would: the line-up, the last three races, last year's race
+   at the circuit and the expected weather — never the model's order. You see both only after you have
+   submitted; other players' picks stay hidden until the scheduled start (F1DB session time), when
+   predictions lock.
+2. **After the weekend** — *Fetch results & score* (or `make game-settle EVENT=2026-21`) pulls the F1DB
+   checkout, re-ingests the season's results and the race's lap timing, and scores every entrant: 10 for an
+   exact position, 6 one place off, 3 two off, 1 for anyone else who finished in the top ten, +10 for the
+   full podium, +25 for a perfect ten (135 max). F1DB usually has results within a day or two of the race.
+3. **Leaderboard** — points, exact hits, podiums and race wins accumulate per season for the players, the
+   *ApexLens model* and *Claude (AI)*.
+
+The AI needs `pip install -e ".[ai]"` and Anthropic credentials (`ANTHROPIC_API_KEY` in `.env`, or
+`ant auth login`); without them the game runs with the model only. `APEXLENS_GAME_AI_MODEL` picks the
+model (default `claude-opus-5-5`). Game files live under `data/game/` and are not committed.
+
 ## Commands
 
 | Target | What it does |
@@ -134,6 +163,7 @@ make docker-up               # API on :8000, dashboard (nginx) on :8080
 | `make train` | Model A for both horizons; walk-forward evaluation; versioned artifacts and production pointers |
 | `make evaluate` | Explanation validation, feature ablations, Models B and F, error analysis |
 | `make reports` | `reports/*.md`, `docs/data_dictionary.md`, `docs/feature_definitions.md`, `docs/model_card.md` |
+| `make game-settle EVENT=2026-21` / `game-leaderboard` | Prediction game: fetch a race's result and score it / print the standings |
 | `make test` / `test-fast` | Python tests (real-data tests skip when `data/` is absent) / without the real-data suite |
 | `make check` | Lint, Python tests, frontend typecheck and tests |
 
@@ -151,6 +181,7 @@ FastAPI with OpenAPI docs at `/docs`. Main endpoints:
 | Predictions | `POST /api/predict/lap-time`, `/predict/driver-comparison`, `/explain`, `/scenarios` |
 | Models | `GET /api/models`, `/models/{v}/metrics`, `/models/{v}/explanations`, `/models/{v}/explanation-validation`, `/evaluation`, `/experiments` |
 | Race week | `GET /api/strategy/race-weeks`, `POST /api/strategy/plan`, `GET /api/strategy/backtest` |
+| Prediction game | `GET /api/game/rules`, `/game/events`, `/game/events/{id}`, `POST /api/game/events/{id}/predictions`, `/game/events/{id}/settle`, `GET /api/game/leaderboard` |
 
 Errors are structured (`{"error": {"code": ..., "message": ...}}`); invalid or unsupported requests
 return 422 with the reason, and predictions flag extrapolation and thin evidence in `warnings`.
@@ -159,8 +190,8 @@ return 422 with the reason, and predictions flag extrapolation and thin evidence
 
 ```
 src/apexlens/      data_sources · ingestion · cleaning · features · track_geometry · driver_profiles
-                   modeling · evaluation · explainability · predictions · strategy · services · api · reporting
-scripts/           ingest_season · update_event · build_features · train_models · evaluate_models · generate_reports
+                   modeling · evaluation · explainability · predictions · strategy · game · services · api · reporting
+scripts/           ingest_season · update_event · build_features · train_models · evaluate_models · generate_reports · game
 frontend/          React + TypeScript + Vite + Tailwind + ECharts dashboard
 tests/             unit · data_quality · modeling · integration (fixtures are real data excerpts)
 docs/              architecture, data sources, methodology, evaluation protocol, limitations, generated docs
