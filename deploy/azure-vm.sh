@@ -9,11 +9,15 @@ SIZE="${1:-Standard_B2s}"
 REGION="${2:-centralindia}"
 GROUP="apexlens"
 NAME="apexlens"
+# your SSH public key: APEXLENS_SSH_KEY, else ~/.ssh/id_ed25519.pub, else ~/.ssh/id_rsa.pub (generated if missing)
+KEY="${APEXLENS_SSH_KEY:-}"
+[ -n "$KEY" ] || for k in ~/.ssh/id_ed25519.pub ~/.ssh/id_rsa.pub; do [ -f "$k" ] && KEY="$k" && break; done
+if [ -n "$KEY" ]; then KEYARG=(--ssh-key-values "$KEY"); else KEYARG=(--generate-ssh-keys); fi
 
 az group create --name "$GROUP" --location "$REGION" --output none
-# Standard HDD (cheapest), Ubuntu 24.04 LTS, your ~/.ssh/id_rsa.pub (generated if missing)
+# Standard HDD (cheapest), Ubuntu 24.04 LTS
 az vm create --resource-group "$GROUP" --name "$NAME" --image Ubuntu2404 --size "$SIZE" \
-  --admin-username azureuser --generate-ssh-keys --public-ip-sku Standard \
+  --admin-username azureuser "${KEYARG[@]}" --public-ip-sku Standard \
   --storage-sku Standard_LRS --os-disk-size-gb 64 --output table
 az vm open-port --resource-group "$GROUP" --name "$NAME" --port 80,443 --priority 1001 --output none
 IP="$(az vm show --resource-group "$GROUP" --name "$NAME" --show-details --query publicIps -o tsv)"

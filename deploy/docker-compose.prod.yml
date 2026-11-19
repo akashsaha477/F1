@@ -2,27 +2,28 @@
 # Run from the repository root so that ./.env is used for the variables below:
 #   docker compose --project-directory . -f deploy/docker-compose.prod.yml up -d --build
 #   docker compose --project-directory . -f deploy/docker-compose.prod.yml --profile pipeline run --rm pipeline
-# deploy/setup.sh does all of this on a fresh Ubuntu VM. Paths in this file are relative to deploy/.
+# deploy/setup.sh does all of this on a fresh Ubuntu VM. With --project-directory, every relative path below is
+# resolved from the repository root, not from deploy/.
 name: apexlens
 
 services:
   api:
     build:
-      context: ..
+      context: .
     restart: unless-stopped
-    env_file: ../.env
+    env_file: .env
     environment:
       APEXLENS_API_CORS_ORIGINS: https://${APEXLENS_DOMAIN}
     volumes:
-      - ../data:/app/data
-      - ../reports:/app/reports
+      - ./data:/app/data
+      - ./reports:/app/reports
     expose: ["8000"]
     logging:
       options: { max-size: "20m", max-file: "3" }
 
   web:
     build:
-      context: ../frontend
+      context: ./frontend
     restart: unless-stopped
     depends_on: [api]
     expose: ["80"]
@@ -37,19 +38,19 @@ services:
     environment:
       APEXLENS_DOMAIN: ${APEXLENS_DOMAIN}
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
 
   # one-off: build the dataset and models (hours; needs outbound internet)
   pipeline:
     build:
-      context: ..
+      context: .
     profiles: ["pipeline"]
-    env_file: ../.env
+    env_file: .env
     volumes:
-      - ../data:/app/data
-      - ../reports:/app/reports
+      - ./data:/app/data
+      - ./reports:/app/reports
     command: >
       sh -c "python scripts/ingest_season.py --seasons $${SEASONS:-2022-2026} --telemetry &&
              python scripts/build_features.py &&
