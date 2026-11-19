@@ -68,6 +68,10 @@ token, the key), builds the images, **runs the data pipeline** (ingesting 2022�
 training, evaluation and reports takes a few hours on 2 Arm cores — it is a one-off, and safe to re-run),
 starts the services and installs the daily settle job. It prints the URL and the admin token at the end.
 
+**Campus networks:** some (IIT Kanpur's Fortinet DNS filter, for one) block `sslip.io` and show a "Web Page
+Blocked" page with a self-signed certificate. On Azure, use the free Microsoft name instead — `azure-vm.sh` sets
+`apexlens-f1.<region>.cloudapp.azure.com` and prints it — and pass it with `--domain`.
+
 Options: `--domain predictions.example.com` if you own a domain (point an A record at the VM first),
 `--skip-pipeline` if `data/` was copied from elsewhere, `--seasons 2024-2026` for a smaller dataset.
 

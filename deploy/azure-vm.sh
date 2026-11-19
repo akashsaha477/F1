@@ -21,7 +21,11 @@ az vm create --resource-group "$GROUP" --name "$NAME" --image Ubuntu2404 --size 
   --storage-sku Standard_LRS --os-disk-size-gb 64 --output table
 az vm open-port --resource-group "$GROUP" --name "$NAME" --port 80,443 --priority 1001 --output none
 IP="$(az vm show --resource-group "$GROUP" --name "$NAME" --show-details --query publicIps -o tsv)"
+# a free <label>.<region>.cloudapp.azure.com name: campus DNS filters (e.g. Fortinet) block sslip.io, not Azure
+FQDN="$(az network public-ip update --resource-group "$GROUP" --name "${NAME}PublicIP" --dns-name "${DNS_LABEL:-apexlens-f1}" \
+  --query dnsSettings.fqdn -o tsv)"
 echo
 echo "VM ready: ssh azureuser@${IP}"
+echo "Site address: ${FQDN}  ->  on the VM: bash deploy/setup.sh --domain ${FQDN}"
 echo "If the size is not available in ${REGION} for a student subscription, try: bash deploy/azure-vm.sh Standard_B2s southindia"
 echo "Stop paying while it is off:  az vm deallocate -g ${GROUP} -n ${NAME}   (start again: az vm start ...)"
