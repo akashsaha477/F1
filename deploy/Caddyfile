@@ -1,5 +1,21 @@
 # HTTPS for the dashboard; the API is reached through the dashboard's /api proxy (same origin).
+# The API documentation is private: it maps every endpoint, including the admin ones. Credentials come from .env
+# (APEXLENS_ADMIN_USER and APEXLENS_ADMIN_HASH_B64, a base64-encoded bcrypt hash; deploy/setup.sh creates them).
 {$APEXLENS_DOMAIN} {
 	encode gzip
+
+	@private path /api/docs /api/docs/* /api/redoc /api/redoc/* /api/openapi.json
+	basic_auth @private {
+		{$APEXLENS_ADMIN_USER:admin} {$APEXLENS_ADMIN_HASH_B64}
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+
 	reverse_proxy web:80
 }

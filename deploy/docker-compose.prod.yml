@@ -37,6 +37,8 @@ services:
       - "443:443"
     environment:
       APEXLENS_DOMAIN: ${APEXLENS_DOMAIN}
+      APEXLENS_ADMIN_USER: ${APEXLENS_ADMIN_USER:-admin}
+      APEXLENS_ADMIN_HASH_B64: ${APEXLENS_ADMIN_HASH_B64:?run deploy/setup.sh or set APEXLENS_ADMIN_HASH_B64 in .env}
     volumes:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data

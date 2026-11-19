@@ -74,6 +74,16 @@ else
 fi
 DOMAIN="$(grep '^APEXLENS_DOMAIN=' .env | cut -d= -f2-)"
 ADMIN_TOKEN="$(grep '^APEXLENS_GAME_ADMIN_TOKEN=' .env | cut -d= -f2-)"
+# password for the private API docs (/api/docs): only its bcrypt hash goes into .env; the password is printed once
+# and kept in ~/apexlens-admin-password.txt (mode 600)
+if ! grep -q '^APEXLENS_ADMIN_HASH_B64=' .env; then
+  ADMIN_PW="$(openssl rand -base64 18 | tr -d '/+=' | cut -c1-20)"
+  HASH="$(dc_run() { if docker info >/dev/null 2>&1; then docker "$@"; else sudo docker "$@"; fi; }; \
+          dc_run run --rm caddy:2-alpine caddy hash-password --plaintext "$ADMIN_PW")"
+  { echo "APEXLENS_ADMIN_USER=admin"; echo "APEXLENS_ADMIN_HASH_B64=$(printf %s "$HASH" | base64 -w0)"; } >> .env
+  ( umask 077; printf '%s\n' "$ADMIN_PW" > ~/apexlens-admin-password.txt )
+fi
+chmod 600 .env
 mkdir -p data reports
 
 say "Images"
@@ -94,6 +104,6 @@ JOB="cd $PWD && docker compose --project-directory . -f deploy/docker-compose.pr
 
 say "Done"
 echo "Dashboard:    https://${DOMAIN}   (the certificate is issued on the first visit; give it a minute)"
-echo "API docs:     https://${DOMAIN}/api/docs"
+echo "API docs:     https://${DOMAIN}/api/docs   (private: user $(grep '^APEXLENS_ADMIN_USER=' .env | cut -d= -f2-), password in ~/apexlens-admin-password.txt)"
 echo "Admin token:  ${ADMIN_TOKEN}   (paste it in the prediction game's 'After the race' box; it is in .env)"
 echo "Logs:         docker compose --project-directory . -f deploy/docker-compose.prod.yml logs -f"
