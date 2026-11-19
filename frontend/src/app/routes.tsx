@@ -10,6 +10,7 @@ import ScenarioLabPage from "../pages/ScenarioLab";
 import MethodologyPage from "../pages/Methodology";
 import RaceStrategyPage from "../pages/RaceStrategy";
 import PredictionGamePage from "../pages/PredictionGame";
+import AboutPage from "../pages/About";
 
 export const routes: { path: string; element: ReactElement }[] = [
   { path: "/", element: <OverviewPage /> },
@@ -23,4 +24,5 @@ export const routes: { path: string; element: ReactElement }[] = [
   { path: "/explain", element: <ExplainPredictionPage /> },
   { path: "/scenarios", element: <ScenarioLabPage /> },
   { path: "/methodology", element: <MethodologyPage /> },
+  { path: "/about", element: <AboutPage /> },
 ];

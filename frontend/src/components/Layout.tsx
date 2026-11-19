@@ -12,6 +12,7 @@ export const NAV = [
   { to: "/explain", label: "Explain a prediction" },
   { to: "/scenarios", label: "Scenario laboratory" },
   { to: "/methodology", label: "Data & methodology" },
+  { to: "/about", label: "About" },
 ];
 
 export function Layout({ nav = NAV }: { nav?: typeof NAV }) {
@@ -37,7 +38,12 @@ export function Layout({ nav = NAV }: { nav?: typeof NAV }) {
             </NavLink>
           ))}
         </nav>
-        <p className="mt-auto px-2 text-[10px] leading-relaxed text-ink-muted">
+        <div className="mt-auto mb-3 px-2">
+          <a href="https://github.com/akashsaha477/F1" target="_blank" rel="noreferrer"
+            className="block text-xs text-ink-2 hover:text-ink">★ Code on GitHub ↗</a>
+          <NavLink to="/about" className="mt-1 block text-xs text-ink-2 hover:text-ink">Built by Akash Saha</NavLink>
+        </div>
+        <p className="px-2 text-[10px] leading-relaxed text-ink-muted">
           Unofficial research tool. Not associated with Formula 1, the FIA or any team. Data: F1DB (CC BY 4.0) and FastF1
           timing exports.
         </p>
