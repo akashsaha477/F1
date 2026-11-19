@@ -573,9 +573,8 @@ export interface GameEntry {
   key: string;
   kind: "player" | "model" | "ai";
   name: string;
-  status: "ok" | "pending" | "error" | "unavailable";
+  status: "ok" | "pending";
   submitted_at: string | null;
-  reason?: string | null;
   picks?: string[] | null;
   note?: string | null;
   rationale?: string | null;
@@ -624,6 +623,7 @@ export interface GameRules {
   bots: string;
   entrants: { key: string; name: string; kind: string }[];
   settle_protected: boolean;
+  ai_enabled: boolean;
 }
 
 export interface PitWindow { stop: number; best_lap: number; from_lap: number; to_lap: number }

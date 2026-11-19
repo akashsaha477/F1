@@ -75,9 +75,14 @@ class GameService:
 
     # -- catalogue -----------------------------------------------------------------------------
     def rules(self) -> dict:
-        return {**RULES, "entrants": [{"key": MODEL_KEY, "name": MODEL_NAME, "kind": "model"},
-                                      {"key": AI_KEY, "name": AI_NAME, "kind": "ai"}],
-                "settle_protected": bool(get_settings().game_admin_token)}
+        s = get_settings()
+        ai = s.game_ai_enabled
+        entrants = [{"key": MODEL_KEY, "name": MODEL_NAME, "kind": "model"}]
+        if ai:
+            entrants.append({"key": AI_KEY, "name": AI_NAME, "kind": "ai"})
+        bots = RULES["bots"] if ai else ("The ApexLens model's order is frozen when the race is opened for predictions, "
+                                         "with the data ingested at that time. It never sees your picks.")
+        return {**RULES, "bots": bots, "entrants": entrants, "ai_enabled": ai, "settle_protected": bool(s.game_admin_token)}
 
     def events(self, season: int | None = None) -> list[dict]:
         out = []
@@ -196,6 +201,8 @@ class GameService:
         return self._view(w, self.store.load(event_id), key)
 
     def _ensure_ai(self, event_id: str) -> None:
+        if not get_settings().game_ai_enabled:
+            return
         with self.store.lock:
             g = self.store.load(event_id)
             e = g["entries"].get(AI_KEY)
@@ -253,10 +260,15 @@ class GameService:
         status = self._status(w, g)
         public = status in ("locked", "settled")          # the race has started: every pick is on the table
         committed = me is not None and me in g["entries"]  # you have submitted: you see your own and the bots' picks
+        ai_on = get_settings().game_ai_enabled
         rows = []
         for key, e in g["entries"].items():
-            row = {"key": key, "kind": e["kind"], "name": e["name"], "status": e.get("status", "ok"),
-                   "submitted_at": e.get("submitted_at"), "reason": e.get("reason")}
+            st = e.get("status", "ok")
+            # an AI entrant that has no prediction (disabled, no credentials, failed) is not shown at all; failure
+            # reasons stay in the server log and the race file, never in public responses
+            if e["kind"] == "ai" and not (st == "ok" or (st == "pending" and ai_on)):
+                continue
+            row = {"key": key, "kind": e["kind"], "name": e["name"], "status": st, "submitted_at": e.get("submitted_at")}
             if public or key == me or (committed and e["kind"] != "player"):
                 row.update({"picks": e.get("picks"), "note": e.get("note"), "rationale": e.get("rationale"),
                             "data_as_of": e.get("data_as_of")})
@@ -273,7 +285,7 @@ class GameService:
             "field": g["field"], "entries": rows, "revealed": public or committed, "you": me if committed else None,
             "model_warnings": g["entries"][MODEL_KEY].get("warnings", []),
             "result": g.get("result"), "standings": g.get("standings"),
-            "ai_pending": any(e.get("status") == "pending" for e in g["entries"].values()),
+            "ai_pending": any(r["status"] == "pending" for r in rows),
         }
 
     # -- settling ------------------------------------------------------------------------------

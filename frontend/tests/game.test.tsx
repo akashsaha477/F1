@@ -11,7 +11,7 @@ const top = (from: string[]) => from.slice(0, 10);
 const rules = {
   picks: 10, max_points: 135, deadline: "Predictions close at the race start.", result: "Classified positions from F1DB.", bots: "Bots are frozen.",
   per_pick: [{ outcome: "exact", condition: "exact position", points: 10 }], bonuses: [{ name: "podium", condition: "podium set", points: 10 }],
-  entrants: [], settle_protected: false,
+  entrants: [], settle_protected: false, ai_enabled: false,
 };
 const events = {
   events: [
@@ -51,7 +51,6 @@ const settled = {
   entries: [
     { key: "ann", kind: "player", name: "Ann", status: "ok", submitted_at: "x", picks: top(ids), score: score(110, 10) },
     { key: "apexlens", kind: "model", name: "ApexLens model", status: "ok", submitted_at: "x", picks: top([...ids].reverse()), score: score(10, 0), note: "frozen" },
-    { key: "claude", kind: "ai", name: "Claude (AI)", status: "unavailable", submitted_at: "x", picks: null, reason: "no key" },
   ],
   result: { settled_at: "2026-11-16T09:00:00Z", classified: field.map((f, i) => ({ position: i + 1, driver_id: f.driver_id, name: f.name, constructor_id: "team-x" })),
     not_classified: [], not_in_field: [] },
@@ -70,7 +69,7 @@ describe("Prediction game", () => {
     let submitted: unknown = null;
     const fetchMock = mockApi((url, init) => {
       if (url.pathname === "/api/game/events") return { body: events };
-      if (url.pathname === "/api/game/rules") return { body: rules };
+      if (url.pathname === "/api/game/rules") return { body: { ...rules, ai_enabled: true } };
       if (url.pathname === "/api/game/leaderboard") return { body: { season: 2026, races: [], rows: [] } };
       if (url.pathname === "/api/game/events/2026-21/predictions" && init?.method === "POST") { submitted = JSON.parse(String(init.body)); return { body: revealed }; }
       if (url.pathname === "/api/game/events/2026-21") return { body: submitted ? revealed : hidden };
@@ -114,7 +113,9 @@ describe("Prediction game", () => {
     expect(await screen.findByText("settled")).toBeInTheDocument();
     expect((await screen.findAllByText("110 pts")).length).toBe(3); // the "Top scorer" and "You" tiles and the table header
     expect(screen.getAllByText("10 pts").length).toBeGreaterThan(0);
-    expect(screen.getByText(/not available \(no key\)/)).toBeInTheDocument();
+    // with the AI entrant off, nothing on the page mentions it
+    expect(screen.queryByText(/Claude \(AI\)/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/the AI/)).not.toBeInTheDocument();
     expect(await screen.findByText("Leaderboard · 2026")).toBeInTheDocument();
     expect(await screen.findByText("1 race scored")).toBeInTheDocument();
     expect(await screen.findByText("Up to 135 points per race")).toBeInTheDocument();

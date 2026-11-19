@@ -54,11 +54,14 @@ export default function PredictionGamePage() {
     qc.invalidateQueries({ queryKey: ["game-leaderboard"] });
   };
   const pick = (id: string) => { setEventId(id); setParams({ event: id }, { replace: true }); };
+  const ai = useGameRules().data?.ai_enabled ?? false;
 
   return (
     <div className="space-y-5">
       <PageHeader title="Prediction game"
-        description="Call the top ten before the race. Once you have submitted, you see what the ApexLens model and the AI predicted; after the weekend the real result scores everyone and the season leaderboard keeps count — you, your friends, the model and the AI." />
+        description={ai
+          ? "Call the top ten before the race. Once you have submitted, you see what the ApexLens model and the AI predicted; after the weekend the real result scores everyone and the season leaderboard keeps count — you, your friends, the model and the AI."
+          : "Call the top ten before the race. Once you have submitted, you see what the ApexLens model predicted; after the weekend the real result scores everyone and the season leaderboard keeps count — you, your friends and the model."} />
 
       <Card title="Race">
         {events.isLoading ? <LoadingState /> : events.isError ? <ErrorState error={events.error} onRetry={() => events.refetch()} /> : (
@@ -95,7 +98,7 @@ export default function PredictionGamePage() {
       {playable && detail.isLoading && <LoadingState label="Opening the race (the model's order is frozen now)…" />}
       {playable && detail.isError && <ErrorState error={detail.error} onRetry={() => detail.refetch()} />}
       {playable && detail.data && (
-        <RaceView key={detail.data.event.event_id} d={detail.data} name={name} onChanged={refresh} />
+        <RaceView key={detail.data.event.event_id} d={detail.data} name={name} ai={ai} onChanged={refresh} />
       )}
       {!playable && !events.isLoading && week && <EmptyState>Pick a race that is open for predictions or already scored.</EmptyState>}
 
@@ -114,7 +117,7 @@ function StatusBadge({ status }: { status: GameEventSummary["game_status"] }) {
   return <StatusPill status="critical">unavailable</StatusPill>;
 }
 
-function RaceView({ d, name, onChanged }: { d: GameEventDetail; name: string; onChanged: () => void }) {
+function RaceView({ d, name, ai, onChanged }: { d: GameEventDetail; name: string; ai: boolean; onChanged: () => void }) {
   const you = d.entries.find((e) => e.key === d.you);
   const settled = d.status === "settled";
   return (
@@ -122,8 +125,8 @@ function RaceView({ d, name, onChanged }: { d: GameEventDetail; name: string; on
       {settled && <ResultTiles d={d} you={you} />}
       {d.status === "open" && <PicksForm d={d} name={name} existing={you} onChanged={onChanged} />}
       {d.status === "locked" && <SettleCard d={d} onChanged={onChanged} />}
-      {d.revealed ? <PredictionsTable d={d} /> : (
-        <Card title="Predictions" subtitle="The model's and the AI's calls are shown once you have submitted yours; everyone's picks become public when the race starts.">
+      {d.revealed ? <PredictionsTable d={d} ai={ai} /> : (
+        <Card title="Predictions" subtitle={`${ai ? "The model's and the AI's calls are" : "The model's call is"} shown once you have submitted yours; everyone's picks become public when the race starts.`}>
           <HiddenEntrants entries={d.entries} />
         </Card>
       )}
@@ -174,14 +177,16 @@ function PicksForm({ d, name, existing, onChanged }: { d: GameEventDetail; name:
 
 const OUTCOME_CLASS: Record<string, string> = { exact: "text-good", "one off": "text-good", "two off": "text-warn", "in top ten": "text-ink-2" };
 
-function PredictionsTable({ d }: { d: GameEventDetail }) {
+function PredictionsTable({ d, ai }: { d: GameEventDetail; ai: boolean }) {
   const byId = new Map(d.field.map((f) => [f.driver_id, f]));
   const shown = d.entries.filter((e) => e.picks && e.picks.length);
   const hidden = d.entries.filter((e) => !e.picks || !e.picks.length);
   const actual = new Map((d.result?.classified ?? []).map((c) => [c.position, c]));
   const scoreAt = (e: GameEntry, i: number) => e.score?.picks.find((p) => p.position === i + 1);
   return (
-    <Card title="Predictions" subtitle={d.status === "settled" ? "Points per pick: 10 exact · 6 one off · 3 two off · 1 anywhere in the top ten." : "Everyone's calls side by side. The AI only saw the line-up, recent results and last year's race — not the model's order."}>
+    <Card title="Predictions" subtitle={d.status === "settled" ? "Points per pick: 10 exact · 6 one off · 3 two off · 1 anywhere in the top ten."
+      : ai && d.entries.some((e) => e.kind === "ai") ? "Everyone's calls side by side. The AI only saw the line-up, recent results and last year's race — not the model's order."
+        : "Everyone's calls side by side."}>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="text-left text-xs text-ink-muted">
@@ -229,7 +234,7 @@ function PredictionsTable({ d }: { d: GameEventDetail }) {
         ))}
         {hidden.map((e) => (
           <p key={e.key}><span className="text-ink-2">{e.name}:</span>{" "}
-            {e.status === "pending" ? "thinking…" : e.status === "error" ? `could not predict (${e.reason})` : e.status === "unavailable" ? `not available (${e.reason})` : "picks hidden until the race starts"}
+            {e.status === "pending" ? "thinking…" : "picks hidden until the race starts"}
           </p>
         ))}
         {d.result && d.result.not_classified.length > 0 && (
@@ -271,12 +276,12 @@ function ResultTiles({ d, you }: { d: GameEventDetail; you?: GameEntry }) {
   const ai = d.entries.find((e) => e.kind === "ai");
   const top = d.standings?.[0];
   return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+    <div className={`grid grid-cols-2 gap-3 ${ai ? "md:grid-cols-5" : "md:grid-cols-4"}`}>
       <StatTile label="Winner" value={winner ? lastName(winner.name) : "—"} hint={winner ? titleFromId(winner.constructor_id) : undefined} />
       <StatTile label="Top scorer" value={top ? `${top.points} pts` : "—"} hint={top?.name} />
       <StatTile label="You" value={you?.score ? `${you.score.points} pts` : "—"} hint={you?.score ? `${you.score.exact} exact` : "no entry"} />
       <StatTile label="ApexLens model" value={model?.score ? `${model.score.points} pts` : "—"} hint={model?.score ? `${model.score.exact} exact` : undefined} />
-      <StatTile label="Claude (AI)" value={ai?.score ? `${ai.score.points} pts` : "—"} hint={ai?.score ? `${ai.score.exact} exact` : ai?.reason ?? "not available"} />
+      {ai && <StatTile label="Claude (AI)" value={ai.score ? `${ai.score.points} pts` : "—"} hint={ai.score ? `${ai.score.exact} exact` : undefined} />}
     </div>
   );
 }

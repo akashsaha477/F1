@@ -119,7 +119,9 @@ def predict(context: dict, *, settings: Settings | None = None,
         picks, rationale = parse_response(text, field_ids)
     except Exception as exc:  # noqa: BLE001 - the AI must never break the game
         name = type(exc).__name__
-        if name == "AuthenticationError":
+        # the SDK raises AuthenticationError for a bad key and TypeError when no credentials are configured at all
+        if name == "AuthenticationError" or "resolve authentication" in str(exc):
+            log.warning("AI entrant unavailable: no usable Anthropic credentials")
             return {"status": "unavailable", "reason": "no Anthropic credentials: set ANTHROPIC_API_KEY or run `ant auth login`"}
         log.warning("AI entrant failed: %s: %s", name, exc)
         return {"status": "error", "reason": f"{name}: {exc}"[:300]}

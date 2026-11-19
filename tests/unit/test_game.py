@@ -216,11 +216,12 @@ def test_predict_reveals_the_bots_and_validates_picks(game):
     assert e["picks"] == DRIVERS[1:11] and e["changes"] == 1 and e["name"] == "ann"
 
 
-def test_ai_failures_never_block_the_game(game):
-    game.ai_predictor = lambda ctx: {"status": "error", "reason": "boom"}
+def test_ai_failures_never_block_the_game_and_never_show(game):
+    game.ai_predictor = lambda ctx: {"status": "error", "reason": "TypeError: secret internal detail"}
     v = game.submit("2026-21", "Ann", DRIVERS[:10])
-    ai = next(e for e in v["entries"] if e["kind"] == "ai")
-    assert ai["status"] == "error" and ai["reason"] == "boom" and ai["picks"] is None
+    # a failed AI is not shown at all, and its error text never reaches a response
+    assert all(e["kind"] != "ai" for e in v["entries"]) and "secret internal detail" not in json.dumps(v)
+    assert game.store.load("2026-21")["entries"][AI_KEY]["reason"].endswith("secret internal detail")  # kept on disk
     # the next submission retries a failed AI; a successful one is kept
     game.ai_predictor = lambda ctx: {"status": "ok", "picks": DRIVERS[2:12], "rationale": "", "model": "m"}
     v = game.submit("2026-21", "Bob", DRIVERS[:10])
@@ -228,6 +229,24 @@ def test_ai_failures_never_block_the_game(game):
     game.ai_predictor = lambda ctx: {"status": "error", "reason": "should not run"}
     v = game.submit("2026-21", "Cy", DRIVERS[:10])
     assert next(e for e in v["entries"] if e["kind"] == "ai")["picks"] == DRIVERS[2:12]
+
+
+def test_ai_disabled_is_never_asked_or_mentioned(game, tmp_settings):
+    tmp_settings.game_ai_enabled = False
+    asked = []
+    game.ai_predictor = lambda ctx: asked.append(ctx) or {"status": "ok", "picks": DRIVERS[:10], "rationale": "", "model": "m"}
+    v = game.submit("2026-21", "Ann", DRIVERS[:10])
+    assert asked == [] and all(e["kind"] != "ai" for e in v["entries"]) and AI_KEY not in game.store.load("2026-21")["entries"]
+    rules = game.rules()
+    assert rules["ai_enabled"] is False and [e["kind"] for e in rules["entrants"]] == ["model"] and "AI" not in rules["bots"]
+
+
+def test_missing_credentials_are_reported_as_unavailable(tmp_settings):
+    def no_creds(prompt, ids, s):
+        raise TypeError('"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials"')
+
+    out = AI.predict(context(), settings=tmp_settings, caller=no_creds)
+    assert out["status"] == "unavailable" and "TypeError" not in out["reason"]
 
 
 def test_lock_and_settle(game):
