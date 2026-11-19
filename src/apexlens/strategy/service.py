@@ -18,6 +18,7 @@ from apexlens.storage.io import read_json, read_table
 from apexlens.storage.paths import DataPaths
 from apexlens.strategy import actual as ACT
 from apexlens.strategy import calibration as CAL
+from apexlens.strategy import prequali as PQ
 from apexlens.strategy import race as RACE
 from apexlens.strategy import weather as WX
 from apexlens.strategy.data import StrategyData
@@ -104,12 +105,23 @@ class StrategyService:
             f["date"] = pd.to_datetime(f["date"])
         return f
 
-    def blend_weight(self, before: pd.Timestamp) -> tuple[float, int]:
-        key = ("w", before)
+    def blend_weight(self, before: pd.Timestamp, predicted_grid: bool = False) -> tuple[float, int]:
+        """Weight of the grid in the finishing-order blend, fitted on earlier races. With ``predicted_grid`` it is
+        fitted on those races' *predicted* grids, since a guessed grid deserves less trust than the real one."""
+        key = ("w", before, predicted_grid)
         if key not in self._cache:
             f = self.backtest_field
-            self._cache[key] = RACE.fit_weight(f[f["date"] < before]) if len(f) else (RACE.DEFAULT_W, 0)
+            if not len(f):
+                self._cache[key] = (RACE.DEFAULT_W, 0)
+            elif predicted_grid:
+                self._cache[key] = PQ.fit_predicted_grid_weight(f, self.quali_history, before)
+            else:
+                self._cache[key] = RACE.fit_weight(f[f["date"] < before])
         return self._cache[key]
+
+    @cached_property
+    def quali_history(self) -> pd.DataFrame:
+        return PQ.qualifying_history(self.paths)
 
     def _forecast(self, event: pd.Series) -> dict | None:
         s = get_settings()
@@ -193,18 +205,18 @@ class StrategyService:
         res = ACT.classified(self.data, event_id) if has_data else pd.DataFrame(columns=["driver_id", "grid_position", "position"])
         field = field.merge(res[["driver_id", "grid_position", "position"]], on="driver_id", how="left").rename(
             columns={"grid_position": "grid"})
-        grid_source = "actual starting grid" if has_data and field["grid"].notna().any() else \
-            "predicted from qualifying form (driver's recent average gap to pole)"
-        if not (has_data and field["grid"].notna().any()):
-            q = field["drv_quali_form"].astype(float)
-            field["grid"] = q.fillna(q.max() + 1 if q.notna().any() else 0).rank(method="first")
+        predicted = not (has_data and field["grid"].notna().any())
+        grid_source = "predicted from qualifying form (recent gap to pole, one-off bad sessions capped)" if predicted \
+            else "actual starting grid"
+        if predicted:
+            field["grid"] = PQ.grid_from_form(PQ.grid_form(self.quali_history, ev["date"], list(field["driver_id"]))).to_numpy()
         if grid_position is not None and driver_id is not None:
             others = field["driver_id"] != driver_id
             g = field.loc[others, "grid"].rank(method="first")
             field.loc[others, "grid"] = np.where(g >= grid_position, g + 1, g)
             field.loc[~others, "grid"] = grid_position
             grid_source = "your input for this driver; others shifted"
-        w, n_w = self.blend_weight(ev["date"])
+        w, n_w = self.blend_weight(ev["date"], predicted_grid=predicted)
         order = RACE.predict_order(field, w)
         return {"order": order, "pace_model": model_note, "grid_source": grid_source, "blend_weight": w,
                 "blend_weight_races": n_w, "warnings": warnings, "has_data": has_data}
