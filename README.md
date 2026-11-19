@@ -100,7 +100,7 @@ cp .env.example .env         # optional: data directory, seasons, F1DB checkout 
 make ingest-small            # 3 events of 2024 — end-to-end smoke test (a few minutes)
 make pipeline                # full research dataset: ingest → features → train → evaluate → reports
 
-make api                     # FastAPI on http://127.0.0.1:8000  (OpenAPI docs at /docs)
+make api                     # FastAPI on http://127.0.0.1:8000  (OpenAPI docs at /api/docs)
 make frontend                # dashboard on http://127.0.0.1:5173 (proxies /api)
 ```
 
@@ -169,7 +169,7 @@ model (default `claude-opus-5-5`). Game files live under `data/game/` and are no
 
 ## API
 
-FastAPI with OpenAPI docs at `/docs`. Main endpoints:
+FastAPI with interactive OpenAPI docs at `/api/docs` (live: https://apexlens-f1.eastasia.cloudapp.azure.com/api/docs). Main endpoints:
 
 | Area | Endpoints |
 |---|---|

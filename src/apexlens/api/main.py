@@ -27,7 +27,9 @@ def error(status: int, code: str, message: str) -> JSONResponse:
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title="ApexLens API", version=__version__,
+    # docs under /api so they are reachable through the dashboard's /api proxy in production as well
+    app = FastAPI(title="ApexLens API", version=__version__, docs_url="/api/docs", redoc_url="/api/redoc",
+                  openapi_url="/api/openapi.json",
                   description="Explainable Formula 1 performance intelligence. Unofficial; not associated with "
                               "Formula 1, the FIA or any team.")
     app.add_middleware(CORSMiddleware, allow_origins=get_settings().cors_origins, allow_methods=["GET", "POST"],
